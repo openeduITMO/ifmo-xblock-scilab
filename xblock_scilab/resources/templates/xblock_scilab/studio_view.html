@@ -1,0 +1,49 @@
+<div class="ifmo-xblock-editor" data-metadata="{{ metadata }}">
+
+    <script type="text/template" class="ifmo-xblock-template-base">
+
+        <div class="wrapper-comp-settings is-active" data-metadata="">
+            <ul class="list-input settings-list">
+
+                <li class="field comp-setting-entry">
+                    <div class="wrapper-comp-setting">
+                        <label for="input_{{id}}_display_name" class="label setting-label">Display name</label>
+                        <input id="input_{{id}}_display_name" class="input setting-input" type="text" name="display_name" value="<%= display_name %>" />
+                    </div>
+                </li>
+
+                <li class="field comp-setting-entry">
+                    <div class="wrapper-comp-setting">
+                        <label for="input_{{id}}_weight" class="label setting-label">Weight</label>
+                        <input id="input_{{id}}_weight" class="input setting-input" type="text" name="weight" value="<%= weight %>" />
+                    </div>
+                </li>
+
+                <li class="field comp-setting-entry">
+                    <div class="wrapper-comp-setting">
+                        <label for="input_{{id}}_instructor_checker" class="label setting-label">Instructor checker archive</label>
+                        <div>
+                            <div style="position: relative; width: 400px; height: 43px; border: 1px solid darkgray; background-color: lightgray; border-radius: 3px; cursor: pointer">
+                                <input id="input_{{id}}_instructor_checker" class="setting-input instructor_checker" type="file" name="instructor_checker" style="opacity: 0; width: 100%; height: 100%; position: absolute"/>
+                                <span class="selected_instructor_checker">No checker selected</span>
+                            </div>
+                            <input type="button" class="upload_instructor_checker" value="Upload">
+                        </div>
+                    </div>
+                </li>
+
+                <li class="field comp-setting-entry">
+                    <div class="wrapper-comp-setting">
+                        <label for="input_{{id}}_description" class="label setting-label">Description</label>
+                        <textarea id="input_{{id}}_description" class="input text setting-input" name="description"><%= description %></textarea>
+                    </div>
+                </li>
+
+            </ul>
+        </div>
+
+    </script>
+
+    <div class="ifmo-xblock-content"></div>
+
+</div>

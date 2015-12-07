@@ -1,0 +1,53 @@
+<section class="ifmo-xblock-student xmodule_display xmodule_CapaModule "
+         data-student-state="{{student_state}}"
+         data-do-accept-submissions="{{do_accept_submissions}}"
+         data-message="{{message}}"
+         data-message-type="{{message_type}}"
+         {% if is_staff %}data-is-staff="True"{% endif %}
+>
+
+    <script type="text/template" class="ifmo-xblock-template-base">
+        <h2 class="problem-header"><%= meta.name %></h2>
+        <div class="problem-progress"><%= score.string %></div>
+
+        <% if (message) { %>
+            <div class="ifmo-xblock-message ifmo-xblock-message-<%= message_type %>">
+                <%= message %>
+            </div>
+        <% } %>
+
+        <div><%= meta.text %></div>
+
+        <hr />
+
+        {% if do_accept_submissions %}
+        <div class="controllers">
+            <div class="upload_container"></div>
+        </div>
+
+        {% else %}
+            <b>Submissions are not longer accepted.</b>
+        {% endif %}
+
+        <div class="action">
+            <input type="button" class="reset-celery-task-id" value="Reset celery_task_id" />
+        </div>
+    </script>
+
+    <script type="text/template" class="scilab-template-upload-input">
+        <div class="button upload_input">
+            <span>Choose file</span>
+            <input class="file_upload" type="file" name="submission"/>
+        </div>
+    </script>
+
+    <script type="text/template" class="scilab-template-upload-selected">
+        <button class="button upload_another">Select another file</button>
+        <button class="button button-highlighted upload_do" data-in-progress="Uploading... ">Upload <%= filename %></button>
+    </script>
+
+    <div class="ifmo-xblock-content problem">
+        {{student_state}}
+    </div>
+
+</section>
