@@ -1,9 +1,12 @@
+# -*- coding=utf-8 *-*
+
 from django.core.files.storage import default_storage
 from ifmo_celery_grader.tasks.helpers import GraderTaskBase
 from subprocess import Popen, PIPE
 
 import shutil
 import json
+import time
 import zipfile
 
 
@@ -15,6 +18,11 @@ SCILAB_INSTRUCTOR_CMD = "exec('%s/checker.sce'); exit;"
 class ScilabSubmissionGrade(GraderTaskBase):
 
     def grade(self, student_input, grader_payload):
+
+        default_grade = {
+            'msg': 'ERROR',
+            'grade': 0,
+        }
 
         filename = student_input.get('filename')
         if not filename.endswith('.zip'):
@@ -32,21 +40,35 @@ class ScilabSubmissionGrade(GraderTaskBase):
         student_archive = zipfile.ZipFile(f)
         student_archive.extractall(full_path)
 
-        Popen([SCILAB_EXEC, '-e', SCILAB_STUDENT_CMD % full_path], cwd=full_path).wait()
+        # Процессу разрешено выполняться только 2 секунды
+        process = Popen([SCILAB_EXEC, '-e', SCILAB_STUDENT_CMD % full_path], cwd=full_path)
+        time.sleep(2)
+        process.kill()
+
 
         instructor_filename = grader_payload.get('filename')
-        f = default_storage.open(instructor_filename)
-        instructor_archive = zipfile.ZipFile(f)
-        instructor_archive.extractall(full_path)
 
-        Popen([SCILAB_EXEC, '-e', SCILAB_INSTRUCTOR_CMD % full_path], cwd=full_path).wait()
+        try:
+            f = default_storage.open(instructor_filename)
+            instructor_archive = zipfile.ZipFile(f)
+            instructor_archive.extractall(full_path)
+        except:
+            return default_grade
 
-        f = open(full_path + '/checker_output')
-        result = float(f.read().strip())
+        process = Popen([SCILAB_EXEC, '-e', SCILAB_INSTRUCTOR_CMD % full_path], cwd=full_path)
+        time.sleep(2)
+        process.kill()
+
+        try:
+            f = open(full_path + '/checker_output')
+            result = float(f.read().strip())
+        except:
+            return default_grade
 
         shutil.rmtree(full_path)
 
         return {
+            'msg': 'OK',
             'grade': result,
         }
 
@@ -58,6 +80,7 @@ class ScilabSubmissionGrade(GraderTaskBase):
         module.score = response.get('grade')
 
         state = json.loads(module.state)
+        state['msg'] = response.get('msg')
         state['points'] = module.score
         module.state = json.dumps(state)
 
