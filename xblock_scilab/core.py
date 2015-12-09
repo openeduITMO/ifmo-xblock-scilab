@@ -137,7 +137,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockResources, XBlock):
             return Response(json_body=response)
 
         if self.celery_task_id is not None:
-            task = GraderTask.objects.get(pk=self.celery_task_id)
+            task = GraderTask.objects.get(task_id=self.celery_task_id)
             if task.task_state not in ('SUCCESS', 'FAILURE'):
                 return _return_response({
                     'message': 'Another task is already running or scheduled.',
