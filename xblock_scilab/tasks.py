@@ -8,6 +8,7 @@ import shutil
 import json
 import time
 import zipfile
+import os
 
 
 SCILAB_EXEC = "/ifmo/app/scilab-5.5.2/bin/scilab-adv-cli"
@@ -41,7 +42,8 @@ class ScilabSubmissionGrade(GraderTaskBase):
         student_archive.extractall(full_path)
 
         # Процессу разрешено выполняться только 2 секунды
-        process = Popen([SCILAB_EXEC, '-e', SCILAB_STUDENT_CMD % full_path], cwd=full_path)
+        process = Popen([SCILAB_EXEC, '-e', SCILAB_STUDENT_CMD % full_path], cwd=full_path, env=os.environ.copy())
+        print full_path
         time.sleep(2)
         process.kill()
 
@@ -56,7 +58,7 @@ class ScilabSubmissionGrade(GraderTaskBase):
             default_grade['msg'] = 'INSTRUCTOR UNPACK ERROR'
             return default_grade
 
-        process = Popen([SCILAB_EXEC, '-e', SCILAB_INSTRUCTOR_CMD % full_path], cwd=full_path)
+        process = Popen([SCILAB_EXEC, '-e', SCILAB_INSTRUCTOR_CMD % full_path], cwd=full_path, env=os.environ.copy())
         time.sleep(2)
         process.kill()
 
