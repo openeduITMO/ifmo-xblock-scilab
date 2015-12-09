@@ -150,13 +150,13 @@ class ScilabXBlock(ScilabXBlockFields, XBlockResources, XBlock):
             uploaded_sha1 = get_sha1(upload.file)
 
             real_path = file_storage_path(
-                unicode(self.location),
+                self.location,
                 uploaded_sha1,
                 upload.file.name
             )
 
             instructor_real_path = file_storage_path(
-                unicode(self.location),
+                self.location,
                 'instructor_checker',
                 'instructor_checker.zip'
             )
@@ -209,7 +209,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockResources, XBlock):
         uploaded_file = File(upload.file)
 
         real_path = file_storage_path(
-            unicode(self.location),
+            self.location,
             'instructor_checker',
             upload.file.name
         )
