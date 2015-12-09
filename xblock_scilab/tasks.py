@@ -20,7 +20,7 @@ class ScilabSubmissionGrade(GraderTaskBase):
     def grade(self, student_input, grader_payload):
 
         default_grade = {
-            'msg': 'ERROR',
+            'msg': 'UNKNOWN ERROR',
             'grade': 0,
         }
 
@@ -53,6 +53,7 @@ class ScilabSubmissionGrade(GraderTaskBase):
             instructor_archive = zipfile.ZipFile(f)
             instructor_archive.extractall(full_path)
         except:
+            default_grade['msg'] = 'INSTRUCTOR UNPACK ERROR'
             return default_grade
 
         process = Popen([SCILAB_EXEC, '-e', SCILAB_INSTRUCTOR_CMD % full_path], cwd=full_path)
@@ -63,6 +64,7 @@ class ScilabSubmissionGrade(GraderTaskBase):
             f = open(full_path + '/checker_output')
             result = float(f.read().strip())
         except:
+            default_grade['msg'] = 'CHECKER OUTPUT READ ERROR'
             return default_grade
 
         shutil.rmtree(full_path)
