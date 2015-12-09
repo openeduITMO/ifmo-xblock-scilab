@@ -13,7 +13,7 @@ def get_sha1(file_handler):
     return sha1.hexdigest()
 
 
-def _file_storage_path(self, sha1, filename):
+def file_storage_path(self, sha1, filename):
     # pylint: disable=no-member
     """
     Get file path of storage.
