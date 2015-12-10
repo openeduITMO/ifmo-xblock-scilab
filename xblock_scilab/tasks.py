@@ -21,6 +21,7 @@ SCILAB_EXEC = "/ifmo/app/scilab-5.5.2/bin/scilab-adv-cli"
 SCILAB_STUDENT_CMD = "%s/solution.sce"
 SCILAB_INSTRUCTOR_CMD = "%s/checker.sce"
 SCILAB_EXEC_SCRIPT = "chdir('%s'); exec('%s'); exit(0);"
+SCILAB_HOME = "/ifmo/app/scilab-5.5.2"
 
 
 class ScilabSubmissionGrade(GraderTaskBase):
@@ -96,6 +97,7 @@ class ScilabSubmissionGrade(GraderTaskBase):
 
         # Устанавливаем окружение
         env = os.environ.copy()
+        env['SCIHOME'] = SCILAB_HOME
         if isinstance(extra_env, dict):
             env.update(extra_env)
 
