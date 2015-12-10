@@ -12,23 +12,68 @@ import os
 import pwd
 import logging
 from path import path
+from fcntl import fcntl, F_GETFL, F_SETFL
+from os import O_NONBLOCK, read
 
 logger = logging.getLogger(__name__)
 
 SCILAB_EXEC = "/ifmo/app/scilab-5.5.2/bin/scilab-adv-cli"
 SCILAB_STUDENT_CMD = "%s/solution.sce"
 SCILAB_INSTRUCTOR_CMD = "%s/checker.sce"
-SCILAB_EXEC_SCRIPT = "chdir('%s'); exec('%s'); exit;"
+SCILAB_EXEC_SCRIPT = "chdir('%s'); exec('%s'); exit(0);"
 
 
 class ScilabSubmissionGrade(GraderTaskBase):
 
     @staticmethod
     def _demote(user_uid=os.geteuid(), user_gid=os.getegid()):
+        """
+        Устанавливаем пользователя и группу, необходимо для инициализации
+        дочернего процесса.
+
+        :param user_uid: Пользователь
+        :param user_gid: Группа
+        :return: Инициализирующая функция
+        """
         def result():
             os.seteuid(user_uid)
             os.setegid(user_gid)
         return result
+
+    @staticmethod
+    def _read_all(process):
+        """
+        Читает stdout из процесса. Он должен быть запущен в неблокирующем
+        режиме вывода.
+
+        См. http://eyalarubas.com/python-subproc-nonblock.html
+
+        :param process: Процесс
+        :return: Вывод процесса
+        """
+        result = ''
+        file_desc = process.stdout.fileno()
+        while True:
+            try:
+                data = read(file_desc, 1024)
+                if data == '': break
+                result += data
+            except OSError:
+                break
+        return result
+
+    @staticmethod
+    def _set_non_block(process):
+        """
+        Устанавилвает stdout в неблокирующий режим.
+
+        См. http://eyalarubas.com/python-subproc-nonblock.html
+
+        :param process: Процесс
+        :return:
+        """
+        flags = fcntl(process.stdout, F_GETFL)
+        fcntl(process.stdout, F_SETFL, flags | O_NONBLOCK)
 
     def _spawn_scilab(self, filename, cwd=None, timeout=None, extra_env=None):
         """
@@ -55,15 +100,18 @@ class ScilabSubmissionGrade(GraderTaskBase):
             env.update(extra_env)
 
         # Запускаем процесс
-        process = Popen([SCILAB_EXEC, '-e', SCILAB_EXEC_SCRIPT % (cwd, filename)],
-                        cwd=cwd, env=env,
+        process = Popen([SCILAB_EXEC, '-e', SCILAB_EXEC_SCRIPT % (cwd, filename), '-nb'],
+                        cwd=cwd, env=env, stdout=PIPE, bufsize=1,
                         preexec_fn=ScilabSubmissionGrade._demote())
+        ScilabSubmissionGrade._set_non_block(process)
 
         # Убиваем по таймауту или ждём окончания исполнения, если он не задан
         if timeout is None:
             process.wait()
+            logger.info(ScilabSubmissionGrade._read_all(process))
         else:
             time.sleep(timeout)
+            logger.info(ScilabSubmissionGrade._read_all(process))
             process.kill()
 
         # Возвращаем результат исполнения
