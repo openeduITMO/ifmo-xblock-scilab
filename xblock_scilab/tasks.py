@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 SCILAB_EXEC = "/ifmo/app/scilab-5.5.2/bin/scilab-adv-cli"
 SCILAB_STUDENT_CMD = "%s/solution.sce"
 SCILAB_INSTRUCTOR_CMD = "%s/checker.sce"
-SCILAB_EXEC_SCRIPT = "exec('%s'); exit;"
+SCILAB_EXEC_SCRIPT = "chdir('%s'); exec('%s'); exit;"
 
 
 class ScilabSubmissionGrade(GraderTaskBase):
