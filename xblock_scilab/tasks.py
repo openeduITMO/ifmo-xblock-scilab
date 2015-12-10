@@ -55,7 +55,7 @@ class ScilabSubmissionGrade(GraderTaskBase):
             env.update(extra_env)
 
         # Запускаем процесс
-        process = Popen([SCILAB_EXEC, '-e', SCILAB_EXEC_SCRIPT % filename],
+        process = Popen([SCILAB_EXEC, '-e', SCILAB_EXEC_SCRIPT % (cwd, filename)],
                         cwd=cwd, env=env,
                         preexec_fn=ScilabSubmissionGrade._demote())
 
