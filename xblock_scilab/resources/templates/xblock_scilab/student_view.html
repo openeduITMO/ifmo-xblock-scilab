@@ -10,9 +10,9 @@
         <h2 class="problem-header"><%= meta.name %></h2>
         <div class="problem-progress"><%= score.string %></div>
 
-        <% if (message) { %>
-            <div class="ifmo-xblock-message ifmo-xblock-message-<%= message_type %>">
-                <%= message %>
+        <% if (task_status == 'QUEUED') { %>
+            <div class="ifmo-xblock-message ifmo-xblock-message-info %>">
+                Your submission is queued for grading.
             </div>
         <% } %>
 
@@ -29,9 +29,6 @@
             <b>Submissions are not longer accepted.</b>
         {% endif %}
 
-        <div class="action">
-            <input type="button" class="reset-celery-task-id" value="Reset celery_task_id" />
-        </div>
     </script>
 
     <script type="text/template" class="scilab-template-upload-input">
@@ -47,7 +44,62 @@
     </script>
 
     <div class="ifmo-xblock-content problem">
-        {{student_state}}
+        Подождите, задание загружается...
+        <pre>{{student_state}}</pre>
     </div>
+
+    {% if is_staff %}
+        {% if not is_studio %}
+            <hr/>
+
+            <div class="wrap-instructor-info">
+                <a class="instructor-info-action" href="#{{id}}-tools-modal" id="{{id}}-tools-button">Инструменты инструктора</a>
+                <a class="instructor-info-action" href="#{{id}}-debug-modal" id="{{id}}-debug-button">Отладочная информация</a>
+            </div>
+
+            <section aria-hidden="true" class="modal staff-modal" id="{{id}}-debug-modal" style="width: 800px">
+                <div class="inner-wrapper" style="color: black">
+                    <header><h2>Отладочная информация</h2></header>
+                    <div>&nbsp;</div>
+                    <table>
+                        <tr>
+                            <th>id</th>
+                            <td>{{id}}</td>
+                        </tr>
+                        <tr>
+                            <th>location</th>
+                            <td>{{location}}</td>
+                        </tr>
+                        <tr>
+                            <th>weight</th>
+                            <td>{{weight}}</td>
+                        </tr>
+                    </table>
+                    <hr/>
+                </div>
+            </section>
+
+            <section aria-hidden="true" class="modal staff-modal" id="{{id}}-tools-modal" style="width: 800px">
+                <div class="inner-wrapper" style="color: black">
+                    <header><h2>Инструменты инструктора</h2></header>
+                    <div>&nbsp;</div>
+                    <div>
+                        <label for="{{id}}-staff-user-input">Имя пользователя: </label>
+                        <input type="text" id="{{id}}-staff-user-input" name="user">
+                        <input type="button" value="Получить" class="button staff-get-state-btn" id="{{id}}-staff-get-state-button"/>
+                        <input type="button" value="Сбросить" class="button staff-reset-state-btn" id="{{id}}-staff-reset-state-button"/>
+                        <input type="button" value="Перепроверить" class="button staff-update-state-btn disabled" id="{{id}}-staff-update-state-button" disabled="disabled"/>
+                    </div>
+                    <hr/>
+                    <div id="{{id}}-staff-info">
+                        <p>Состояние пользователя</p>
+                        <div class="staff-info-container" style="max-height: 600px; overflow-y: scroll;">
+                            <pre>{{state}}</pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        {% endif %}
+    {% endif %}
 
 </section>

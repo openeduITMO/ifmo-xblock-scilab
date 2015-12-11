@@ -1,30 +1,8 @@
 from xblock.fields import Scope, Integer, String, Float
+from xblock_ifmo.xblock_ifmo_fields import IfmoXBlockFields
 
 
-class ScilabXBlockFields(object):
-
-    display_name = String(
-        display_name="Display name",
-        default='Scilab Assignment',
-        help="This name appears in the horizontal navigation at the top of the page.",
-        scope=Scope.settings
-    )
-
-    description = String(
-        display_name="Description",
-        scope=Scope.settings
-    )
-
-    weight = Float(
-        display_name="Max score",
-        scope=Scope.settings,
-        default=0,
-    )
-
-    points = Float(
-        scope=Scope.user_state,
-        default=0,
-    )
+class ScilabXBlockFields(IfmoXBlockFields):
 
     instructor_filename = String(
         display_name="Instructor file name",
@@ -33,4 +11,9 @@ class ScilabXBlockFields(object):
 
     celery_task_id = String(
         scope=Scope.user_state
+    )
+
+    task_state = String(
+        scope=Scope.user_state,
+        default='IDLE',
     )

@@ -109,17 +109,19 @@ class ScilabSubmissionGrade(GraderTaskBase):
 
         # Убиваем по таймауту или ждём окончания исполнения, если он не задан
         if timeout is None:
+            # Скорей всего, в этом случае произойдёт блокировка намертво,
+            # поскольку scilab сам не завершится, поэтому timeout нужно задать
             process.wait()
-            logger.info(ScilabSubmissionGrade._read_all(process))
+            output = ScilabSubmissionGrade._read_all(process)
         else:
             time.sleep(timeout)
-            logger.info(ScilabSubmissionGrade._read_all(process))
+            output = ScilabSubmissionGrade._read_all(process)
             process.kill()
 
         # Возвращаем результат исполнения
         return {
             'code': process.returncode,
-            # 'stdout': process.stdout.read(),
+            'stdout': output,
         }
 
     def grade(self, student_input, grader_payload):
@@ -130,10 +132,16 @@ class ScilabSubmissionGrade(GraderTaskBase):
         :return:
         """
 
-        default_grade = {
-            'msg': 'UNKNOWN ERROR',
-            'grade': 0,
-        }
+        def _cleanup():
+            shutil.rmtree(full_path, ignore_errors=True)
+
+        def _result(msg=None, grade=0., cleanup=True):
+            if cleanup:
+                _cleanup()
+            return {
+                'msg': msg,
+                'grade': grade,
+            }
 
         filename = student_input.get('filename')
         if not filename.endswith('.zip'):
@@ -142,10 +150,7 @@ class ScilabSubmissionGrade(GraderTaskBase):
         file_path = filename[:-4]
         full_path = '/tmp/xblock_scilab/' + file_path
 
-        try:
-            shutil.rmtree(full_path)
-        except:
-            pass
+        _cleanup()
 
         f = default_storage.open(filename)
         student_archive = zipfile.ZipFile(f)
@@ -162,25 +167,22 @@ class ScilabSubmissionGrade(GraderTaskBase):
             instructor_archive = zipfile.ZipFile(f)
             instructor_archive.extractall(full_path)
         except:
-            default_grade['msg'] = 'INSTRUCTOR UNPACK ERROR'
-            return default_grade
+            return _result(
+                msg='Не удалось инициализировать архив инструктора (IUE).'
+            )
 
         filename = SCILAB_INSTRUCTOR_CMD % full_path
         checker_code = self._spawn_scilab(filename, timeout=2)
 
         try:
             f = open(full_path + '/checker_output')
-            result = float(f.read().strip())
-        except:
-            default_grade['msg'] = 'CHECKER OUTPUT READ ERROR'
-            return default_grade
+            result_grade = float(f.read().strip())
+        except IOError:
+            return _result(
+                msg='Не удалось определить результат проверки (CORE).'
+            )
 
-        shutil.rmtree(full_path)
-
-        return {
-            'msg': 'OK',
-            'grade': result,
-        }
+        return _result(msg='OK', grade=result_grade)
 
     def grade_success(self, student_input, grader_payload, system_payload, system, response):
 

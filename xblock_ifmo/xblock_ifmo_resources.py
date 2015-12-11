@@ -3,8 +3,7 @@ from django.template import Context, Template
 import pkg_resources
 
 
-# This probably needs to be in separate shared package
-class XBlockResources(object):
+class IfmoXBlockResources(object):
 
     package = __package__
 

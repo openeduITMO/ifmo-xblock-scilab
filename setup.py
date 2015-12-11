@@ -16,7 +16,7 @@ setup(
         'python-dateutil',
         'xblock'
     ],
-    packages=['xblock_scilab'],
+    packages=['xblock_scilab', 'xblock_ifmo'],
     include_package_data=True,
     license='BSD License',
     description='Package provides ifmo courses specific modules.',

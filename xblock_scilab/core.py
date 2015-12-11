@@ -3,30 +3,25 @@
 from django.contrib.auth.models import User
 from django.core.files.base import File
 from django.core.files.storage import default_storage
-from django.db import transaction
 from ifmo_celery_grader.models import GraderTask
 from ifmo_celery_grader.tasks.helpers import reserve_task, submit_task_grade
 from webob.response import Response
 from xblock.core import XBlock
 from xblock.fragment import Fragment
+from xblock_ifmo.xblock_ifmo import IfmoXBlock
 from xblock_scilab.models import ScilabSubmission
 from xblock_scilab.tasks import ScilabSubmissionGrade
 from xblock_scilab.utils import get_sha1, file_storage_path
 
 
 from .fields import ScilabXBlockFields
-from .resources import XBlockResources
 
-import datetime
 import json
 import mimetypes
-import pytz
 
 
-class ScilabXBlock(ScilabXBlockFields, XBlockResources, XBlock):
+class ScilabXBlock(ScilabXBlockFields, IfmoXBlock):
 
-    icon_class = 'problem'
-    has_score = True
     package = __package__
 
     # Use this unless submissions api is used
@@ -44,7 +39,8 @@ class ScilabXBlock(ScilabXBlockFields, XBlockResources, XBlock):
         fragment.add_css(self.load_css('student_view.css'))
         fragment.add_javascript(self.load_js('student_view.js'))
         fragment.initialize_js('ScilabXBlockStudentView')
-        return fragment
+
+        return super(ScilabXBlock, self).student_view_base(fragment)
 
     def studio_view(self, context):
 
@@ -60,19 +56,11 @@ class ScilabXBlock(ScilabXBlockFields, XBlockResources, XBlock):
         fragment.initialize_js('ScilabXBlockStudioView')
         return fragment
 
-    def get_score(self):
-        return {
-            'score': self.points * self.weight,
-            'total': self.weight,
-        }
-
-    def max_score(self):
-        return self.weight
-
     #==================================================================================================================#
 
     def _get_student_context(self, user=None):
         response = {
+            'id': self.scope_ids.usage_id.block_id,
             'student_state': json.dumps(
                 {
                     'meta': {
@@ -84,6 +72,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockResources, XBlock):
                         'max': self.weight,
                         'string': self._get_score_string(),
                     },
+                    'task_status': self.task_state,
                 }
             ),
             'is_staff': getattr(self.xmodule_runtime, 'user_is_staff', False),
@@ -94,14 +83,9 @@ class ScilabXBlock(ScilabXBlockFields, XBlockResources, XBlock):
             'do_accept_submissions': True if self.due is None or self._now() > self.due else False,
             'due': self.due,
 
-            'message': 'NO-MESSAGE',
-            'message_type': 'none',
+            'message': '',
+            'message_type': '',
         }
-        if self.celery_task_id is not None:
-            response.update({
-                'message': 'You submission in now being graded.',
-                'message_type': 'info',
-            })
         return response
 
     def _get_instructor_context(self):
@@ -118,15 +102,18 @@ class ScilabXBlock(ScilabXBlockFields, XBlockResources, XBlock):
 
     @XBlock.json_handler
     def save_settings(self, data, suffix):
-        self.display_name = data.get('display_name')
-        self.description = data.get('description')
-        self.weight = data.get('weight')
-        return '{}'
+        result = super(ScilabXBlock, self).save_settings_base(data)
+        return json.dumps(result)
 
     @XBlock.json_handler
     def reset_celery_task_id(self, data, suffix):
         self.celery_task_id = None
+        self.task_state = ScilabSubmission.STATUS_IDLE
         return self._get_student_context()
+
+    @XBlock.json_handler
+    def user_state(self, data, suffix=''):
+        pass
 
     @XBlock.handler
     def upload_submission(self, request, suffix):
@@ -138,7 +125,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockResources, XBlock):
 
         if self.celery_task_id is not None:
             task = GraderTask.objects.get(task_id=self.celery_task_id)
-            if task.task_state not in ('SUCCESS', 'FAILURE'):
+            if task.task_state not in ScilabSubmission.IDLE_STATUSES:
                 return _return_response({
                     'message': 'Another task is already running or scheduled.',
                     'message_type': 'error',
@@ -198,10 +185,6 @@ class ScilabXBlock(ScilabXBlockFields, XBlockResources, XBlock):
             'message_type': 'info',
         })
 
-    @transaction.autocommit
-    def save_now(self):
-        self.save()
-
     @XBlock.handler
     def upload_instructor_checker(self, request, suffix):
 
@@ -219,20 +202,6 @@ class ScilabXBlock(ScilabXBlockFields, XBlockResources, XBlock):
         default_storage.save(real_path, uploaded_file)
 
         return Response(json_body={})
-
-    #==================================================================================================================#
-
-    def _get_score_string(self):
-        result = ''
-        if self.weight is not None and self.weight != 0:
-            # if self.attempts > 0:
-                result = '(%s/%s points)' % (self.points * self.weight, self.weight,)
-            # else:
-            #     result = '(%s points possible)' % (self.weight,)
-        return result
-
-    def _now():
-        return datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
 
     def _get_grader_payload(self, instructor_checker):
         """
