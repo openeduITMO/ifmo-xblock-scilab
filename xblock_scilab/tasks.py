@@ -142,7 +142,7 @@ class ScilabSubmissionGrade(GraderTaskBase):
         def _cleanup():
             shutil.rmtree(full_path, ignore_errors=True)
 
-        def _result(msg=None, grade=0., cleanup=True):
+        def _result(msg=None, grade=0., cleanup=False):
             if cleanup:
                 _cleanup()
             return {
