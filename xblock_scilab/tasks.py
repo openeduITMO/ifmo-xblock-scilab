@@ -123,7 +123,7 @@ class ScilabSubmissionGrade(GraderTaskBase):
             output = ScilabSubmissionGrade._read_all(process)
             process.kill()
 
-        print output
+        logger.info(output)
 
         # Возвращаем результат исполнения
         return {
