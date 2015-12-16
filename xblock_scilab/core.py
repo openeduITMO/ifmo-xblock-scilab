@@ -40,7 +40,7 @@ class ScilabXBlock(ScilabXBlockFields, IfmoXBlock):
         fragment.add_javascript(self.load_js('student_view.js'))
         fragment.initialize_js('ScilabXBlockStudentView')
 
-        return super(ScilabXBlock, self).student_view_base(fragment)
+        return super(ScilabXBlock, self).student_view_base(fragment, context)
 
     def studio_view(self, context):
 
@@ -59,33 +59,11 @@ class ScilabXBlock(ScilabXBlockFields, IfmoXBlock):
     #==================================================================================================================#
 
     def _get_student_context(self, user=None):
-        response = {
-            'id': self.scope_ids.usage_id.block_id,
-            'student_state': json.dumps(
-                {
-                    'meta': {
-                        'name': self.display_name,
-                        'text': self.description,
-                    },
-                    'score': {
-                        'earned': self.points * self.weight,
-                        'max': self.weight,
-                        'string': self._get_score_string(),
-                    },
-                    'task_status': self.task_state,
-                }
-            ),
-            'is_staff': getattr(self.xmodule_runtime, 'user_is_staff', False),
-
-            # This is probably studio, find out some more ways to determine this
-            'is_studio': self.scope_ids.user_id is None,
-
+        response = super(ScilabXBlock, self).get_student_context()
+        response.update({
             'do_accept_submissions': True if self.due is None or self._now() > self.due else False,
-            'due': self.due,
-
-            'message': '',
-            'message_type': '',
-        }
+            'task_state': self.task_state,
+        })
         return response
 
     def _get_instructor_context(self):

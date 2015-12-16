@@ -1,10 +1,12 @@
 # -*- coding=utf-8 -*-
 
+from courseware.models import StudentModule
 from datetime import datetime
 from django.db import transaction
 from xblock.core import XBlock
 from xblock.fragment import Fragment
 
+import json
 import logging
 import pytz
 
@@ -77,7 +79,26 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
             #     result = '(%s points possible)' % (self.weight,)
         return result
 
-    def student_view_base(self, fragment):
+    @XBlock.json_handler
+    def reset_user_data(self, data, suffix=''):
+        assert self._is_staff()
+        user_login = data.get('user_login')
+        try:
+            module = StudentModule.objects.get(module_state_key=self.location,
+                                               student__username=user_login)
+            module.state = '{}'
+            module.max_grade = None
+            module.grade = None
+            module.save()
+            return {
+                'state': "Состояние пользователя сброшено.",
+            }
+        except StudentModule.DoesNotExist:
+            return {
+                'state': "Модуль для указанного пользователя не существует."
+            }
+
+    def student_view_base(self, fragment, context=None):
         """
         Изменяем фрагмент xblock'а. Оборачиваем весь шаблон в дополнительный.
         Все ресурсы оставляем без именений.
@@ -91,10 +112,42 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
         result.add_frag_resources(fragment)
         result.initialize_js(fragment.js_init_fn, fragment.json_init_args)
 
+        # Используем исходный контекст, но добавим тело
+        if context is None:
+            context = {}
+        context.update({'body': fragment.body_html()})
+
         # Тело оборачиваем отдельно
         result.add_content(self.load_template(
             'student_view.html',
-            context={'body': fragment.body_html()},
+            context=context,
             package='xblock_ifmo'
         ))
         return result
+
+    def get_student_context(self):
+        return {
+            'id': self.scope_ids.usage_id.block_id,
+            'student_state': json.dumps(
+                {
+                    'meta': {
+                        'name': self.display_name,
+                        'text': self.description,
+                    },
+                    'score': {
+                        'earned': self.points * self.weight,
+                        'max': self.weight,
+                        'string': self._get_score_string(),
+                    },
+                }
+            ),
+            'is_staff': getattr(self.xmodule_runtime, 'user_is_staff', False),
+
+            # This is probably studio, find out some more ways to determine this
+            'is_studio': self.scope_ids.user_id is None,
+
+            'due': self.due,
+        }
+
+    def _is_staff(self):
+        return getattr(self.xmodule_runtime, 'user_is_staff', False)

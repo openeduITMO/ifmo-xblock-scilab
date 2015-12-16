@@ -157,6 +157,7 @@ function ScilabXBlockStudentView(runtime, element)
 
         data.message = xblock.data('message');
         data.message_type = xblock.data('message-type');
+        data.task_status = xblock.data('task-status');
 
         var is_staff = xblock.attr("data-is-staff") == "True";
         if (is_staff) {

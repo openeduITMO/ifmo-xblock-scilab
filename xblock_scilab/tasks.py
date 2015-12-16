@@ -39,6 +39,7 @@ class ScilabSubmissionGrade(GraderTaskBase):
         def result():
             os.seteuid(user_uid)
             os.setegid(user_gid)
+            os.setpgrp()
         return result
 
     @staticmethod
@@ -102,8 +103,11 @@ class ScilabSubmissionGrade(GraderTaskBase):
             env.update(extra_env)
 
         # Запускаем процесс
+        # TODO Найти, как запустить scilab без шелла
+        # Если запускать его без шелла, то xcos не может отработать, поскольку
+        # что-то ему не даёт подключиться к Xserver'у
         process = Popen([SCILAB_EXEC, '-e', SCILAB_EXEC_SCRIPT % (cwd, filename), '-nb'],
-                        cwd=cwd, env=env, stdout=PIPE, bufsize=1,
+                        cwd=cwd, env=env, stdout=PIPE, bufsize=1,  shell=True,
                         preexec_fn=ScilabSubmissionGrade._demote())
         ScilabSubmissionGrade._set_non_block(process)
 
@@ -111,12 +115,15 @@ class ScilabSubmissionGrade(GraderTaskBase):
         if timeout is None:
             # Скорей всего, в этом случае произойдёт блокировка намертво,
             # поскольку scilab сам не завершится, поэтому timeout нужно задать
+            logger.warning('Process timeout is not set. Now being in wait-state...')
             process.wait()
             output = ScilabSubmissionGrade._read_all(process)
         else:
             time.sleep(timeout)
             output = ScilabSubmissionGrade._read_all(process)
             process.kill()
+
+        print output
 
         # Возвращаем результат исполнения
         return {
@@ -158,7 +165,7 @@ class ScilabSubmissionGrade(GraderTaskBase):
 
         # Процессу разрешено выполняться только 2 секунды
         filename = SCILAB_STUDENT_CMD % full_path
-        student_code = self._spawn_scilab(filename, timeout=2)
+        student_code = self._spawn_scilab(filename, timeout=15)
 
         instructor_filename = grader_payload.get('filename')
 
@@ -172,7 +179,7 @@ class ScilabSubmissionGrade(GraderTaskBase):
             )
 
         filename = SCILAB_INSTRUCTOR_CMD % full_path
-        checker_code = self._spawn_scilab(filename, timeout=2)
+        checker_code = self._spawn_scilab(filename, timeout=30)
 
         try:
             f = open(full_path + '/checker_output')
