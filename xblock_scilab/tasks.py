@@ -175,7 +175,7 @@ class ScilabSubmissionGrade(GraderTaskBase):
             instructor_archive.extractall(full_path)
         except:
             return _result(
-                msg='Не удалось инициализировать архив инструктора (IUE).'
+                msg='(IAE) Не удалось инициализировать архив инструктора.'
             )
 
         filename = SCILAB_INSTRUCTOR_CMD % full_path
@@ -186,7 +186,7 @@ class ScilabSubmissionGrade(GraderTaskBase):
             result_grade = float(f.read().strip())
         except IOError:
             return _result(
-                msg='Не удалось определить результат проверки (CORE).'
+                msg='(CORE) Не удалось определить результат проверки.'
             )
 
         return _result(msg='OK', grade=result_grade)
