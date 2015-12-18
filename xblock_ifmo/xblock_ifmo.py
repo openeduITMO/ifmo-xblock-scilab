@@ -1,17 +1,20 @@
 # -*- coding=utf-8 -*-
 
 from courseware.models import StudentModule
-from datetime import datetime
+from django.contrib.auth.models import User
 from django.db import transaction
 from xblock.core import XBlock
 from xblock.fragment import Fragment
 
 import json
 import logging
-import pytz
+from .utils import require
 
 from .xblock_ifmo_fields import IfmoXBlockFields
 from .xblock_ifmo_resources import IfmoXBlockResources
+
+from webob.response import Response
+from webob.exc import HTTPBadRequest
 
 logger = logging.getLogger(__name__)
 
@@ -54,15 +57,6 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
         self.weight = data.get('weight')
         return {}
 
-    @staticmethod
-    def _now():
-        """
-        Текущее время в UTC, tz-aware.
-
-        :return: Время в UTC
-        """
-        return datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
-
     def _get_score_string(self):
         """
         Строка, отображающая баллы пользователя, рядом с заголовком (названием
@@ -81,11 +75,9 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
 
     @XBlock.json_handler
     def reset_user_data(self, data, suffix=''):
-        assert self._is_staff()
-        user_login = data.get('user_login')
-        try:
-            module = StudentModule.objects.get(module_state_key=self.location,
-                                               student__username=user_login)
+        require(self._is_staff())
+        module = self.get_module(data.get('user_login'))
+        if module is not None:
             module.state = '{}'
             module.max_grade = None
             module.grade = None
@@ -93,7 +85,18 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
             return {
                 'state': "Состояние пользователя сброшено.",
             }
-        except StudentModule.DoesNotExist:
+        else:
+            return {
+                'state': "Модуль для указанного пользователя не существует."
+            }
+
+    @XBlock.json_handler
+    def get_user_data(self, data, suffix=''):
+        require(self._is_staff())
+        module = self.get_module(data.get('user_login'))
+        if module is not None:
+            return {'state': module.state}
+        else:
             return {
                 'state': "Модуль для указанного пользователя не существует."
             }
@@ -113,41 +116,69 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
         result.initialize_js(fragment.js_init_fn, fragment.json_init_args)
 
         # Используем исходный контекст, но добавим тело
-        if context is None:
-            context = {}
-        context.update({'body': fragment.body_html()})
+        new_context = self.get_student_context_base()
+        new_context.update(context)
+
+        return_context = new_context
+        return_context.update({
+            'body': fragment.body_html(),
+            'context': json.dumps(new_context),
+        })
+
+        print return_context
 
         # Тело оборачиваем отдельно
         result.add_content(self.load_template(
             'student_view.html',
-            context=context,
+            context=return_context,
             package='xblock_ifmo'
         ))
         return result
 
-    def get_student_context(self):
+    def get_student_context(self, user=None):
+        return dict()
+
+    def get_student_context_base(self, user=None):
         return {
-            'id': self.scope_ids.usage_id.block_id,
-            'student_state': json.dumps(
-                {
-                    'meta': {
-                        'name': self.display_name,
-                        'text': self.description,
-                    },
-                    'score': {
-                        'earned': self.points * self.weight,
-                        'max': self.weight,
-                        'string': self._get_score_string(),
-                    },
-                }
-            ),
-            'is_staff': getattr(self.xmodule_runtime, 'user_is_staff', False),
+            'meta': {
+                'id': self.scope_ids.usage_id.block_id,
+                'name': self.display_name,
+                'text': self.description,
+                'due': self.due,
+            },
+            'student_state': {
+                'score': {
+                    'earned': self.points * self.weight,
+                    'max': self.weight,
+                    'string': self._get_score_string(),
+                },
+                'is_staff': self._is_staff(),
 
-            # This is probably studio, find out some more ways to determine this
-            'is_studio': self.scope_ids.user_id is None,
-
-            'due': self.due,
+                # This is probably studio, find out some more ways to determine this
+                'is_studio': self._is_studio(),
+            },
         }
 
     def _is_staff(self):
         return getattr(self.xmodule_runtime, 'user_is_staff', False)
+
+    def _is_studio(self):
+        return self.scope_ids.user_id is None
+
+    def get_response_user_state(self, additional):
+        context = self.get_student_context_base()
+        context.update(additional)
+        return Response(json_body=context)
+
+    def get_module(self, user=None):
+        try:
+            if isinstance(user, User):
+                return StudentModule.objects.get(student=user,
+                                                 module_state_key=self.location)
+            elif isinstance(user, (basestring, unicode)):
+                return StudentModule.objects.get(student__username=user,
+                                                 module_state_key=self.location)
+            else:
+                return None
+        except StudentModule.DoesNotExist:
+            return None

@@ -8,6 +8,7 @@ from ifmo_celery_grader.tasks.helpers import reserve_task, submit_task_grade
 from webob.response import Response
 from xblock.core import XBlock
 from xblock.fragment import Fragment
+from xblock_ifmo.utils import now
 from xblock_ifmo.xblock_ifmo import IfmoXBlock
 from xblock_scilab.models import ScilabSubmission
 from xblock_scilab.tasks import ScilabSubmissionGrade
@@ -32,7 +33,7 @@ class ScilabXBlock(ScilabXBlockFields, IfmoXBlock):
         if context is None:
             context = dict()
 
-        context.update(self._get_student_context())
+        context.update(self.get_student_context())
 
         fragment = Fragment()
         fragment.add_content(self.load_template('xblock_scilab/student_view.html', context))
@@ -58,13 +59,11 @@ class ScilabXBlock(ScilabXBlockFields, IfmoXBlock):
 
     #==================================================================================================================#
 
-    def _get_student_context(self, user=None):
-        response = super(ScilabXBlock, self).get_student_context()
-        response.update({
-            'do_accept_submissions': True if self.due is None or self._now() > self.due else False,
-            'task_state': self.task_state,
-        })
-        return response
+    def get_student_context(self, user=None):
+        return {
+            'allow_submissions': True if self.due is None or now() > self.due else False,
+            'task_status': self.task_state,
+        }
 
     def _get_instructor_context(self):
         return {
@@ -84,29 +83,26 @@ class ScilabXBlock(ScilabXBlockFields, IfmoXBlock):
         return json.dumps(result)
 
     @XBlock.json_handler
-    def reset_celery_task_id(self, data, suffix):
-        self.celery_task_id = None
-        self.task_state = ScilabSubmission.STATUS_IDLE
-        return self._get_student_context()
-
-    @XBlock.json_handler
     def user_state(self, data, suffix=''):
-        pass
+        # TODO: Do user_state more like save_settings
+        return self.get_response_user_state(self.get_student_context())
 
     @XBlock.handler
     def upload_submission(self, request, suffix):
 
         def _return_response(response_update):
-            response = self._get_student_context()
+            response = self.get_student_context()
             response.update(response_update)
-            return Response(json_body=response)
+            return self.get_response_user_state(response)
 
         if self.celery_task_id is not None:
             task = GraderTask.objects.get(task_id=self.celery_task_id)
             if task.task_state not in ScilabSubmission.IDLE_STATUSES:
                 return _return_response({
-                    'message': 'Another task is already running or scheduled.',
-                    'message_type': 'error',
+                    'message': {
+                        'text': 'Another task is already running or scheduled.',
+                        'type': 'error',
+                    }
                 })
 
         try:
@@ -154,13 +150,17 @@ class ScilabXBlock(ScilabXBlockFields, IfmoXBlock):
 
         except Exception as e:
             return _return_response({
-                'message': 'Error occurred while scheduling your submission: ' + e.message,
-                'message_type': 'error',
+                'message': {
+                    'text': 'Error occurred while scheduling your submission: ' + e.message,
+                    'type': 'error',
+                }
             })
 
         return _return_response({
-            'message': 'Your submission has been scheduled.',
-            'message_type': 'info',
+            'message': {
+                'text': 'Your submission has been scheduled.',
+                'type': 'error',
+            }
         })
 
     @XBlock.handler

@@ -1,15 +1,8 @@
-<section class="ifmo-xblock-student"
-         data-student-state="{{student_state}}"
-         data-do-accept-submissions="{{do_accept_submissions}}"
-         data-message="{{message}}"
-         data-message-type="{{message_type}}"
-         {% if is_staff %}data-is-staff="True"{% endif %}
-         data-task-state="{{task_state}}"
->
+<section class="ifmo-xblock-student">
 
     <script type="text/template" class="ifmo-xblock-template-base">
         <h2 class="problem-header"><%= meta.name %></h2>
-        <div class="problem-progress"><%= score.string %></div>
+        <div class="problem-progress"><%= student_state.score.string %></div>
 
         <% if (task_status == 'QUEUED') { %>
             <div class="ifmo-xblock-message ifmo-xblock-message-info %>">
@@ -17,18 +10,27 @@
             </div>
         <% } %>
 
-        <div><%= meta.text %></div>
+        <div class="task"><%= meta.text %></div>
 
-        <hr />
+        <% if (typeof message != 'undefined') { %>
+        <div class="ifmo-xblock-message ifmo-xblock-message-<%= message.type %>"><%= message.text %></div>
+        <% } %>
 
-        {% if do_accept_submissions %}
-        <div class="controllers">
-            <div class="upload_container"></div>
-        </div>
+        <% if (allow_submissions) { %>
 
-        {% else %}
-            <b>Submissions are not longer accepted.</b>
-        {% endif %}
+            <% if (task_status == 'IDLE') { %>
+                <div class="controllers">
+                    <div class="upload_container"></div>
+                </div>
+            <% } else { %>
+                <!--<div class="ifmo-xblock-message ifmo-xblock-message-info">Your submission is queued for grading.</div>-->
+            <% } %>
+
+        <% } else { %>
+            <div class="ifmo-xblock-message ifmo-xblock-message-info">
+                Submissions are no longer accepted.
+            </div>
+        <% } %>
 
     </script>
 
@@ -46,7 +48,7 @@
 
     <div class="ifmo-xblock-content problem">
         Подождите, задание загружается...
-        <pre>{{student_state}}</pre>
+        <pre>{{context}}</pre>
     </div>
 
 </section>

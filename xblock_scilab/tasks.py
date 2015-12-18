@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 SCILAB_EXEC = "/ifmo/app/scilab-5.5.2/bin/scilab-adv-cli"
 SCILAB_STUDENT_CMD = "%s/solution.sce"
 SCILAB_INSTRUCTOR_CMD = "%s/checker.sce"
-SCILAB_EXEC_SCRIPT = "chdir('%s'); exec('%s'); exit(0);"
+SCILAB_EXEC_SCRIPT = "\"chdir('%s'); exec('%s'); exit(0);\""
 SCILAB_HOME = "/ifmo/app/scilab-5.5.2"
 
 
@@ -99,6 +99,7 @@ class ScilabSubmissionGrade(GraderTaskBase):
         # Устанавливаем окружение
         env = os.environ.copy()
         env['SCIHOME'] = SCILAB_HOME
+        env['DISPLAY'] = ':1'
         if isinstance(extra_env, dict):
             env.update(extra_env)
 
@@ -106,7 +107,8 @@ class ScilabSubmissionGrade(GraderTaskBase):
         # TODO Найти, как запустить scilab без шелла
         # Если запускать его без шелла, то xcos не может отработать, поскольку
         # что-то ему не даёт подключиться к Xserver'у
-        process = Popen([SCILAB_EXEC, '-e', SCILAB_EXEC_SCRIPT % (cwd, filename), '-nb'],
+        cmd = [SCILAB_EXEC, '-e', SCILAB_EXEC_SCRIPT % (cwd, filename), '-nb']
+        process = Popen(cmd,
                         cwd=cwd, env=env, stdout=PIPE, bufsize=1,  shell=True,
                         preexec_fn=ScilabSubmissionGrade._demote())
         ScilabSubmissionGrade._set_non_block(process)

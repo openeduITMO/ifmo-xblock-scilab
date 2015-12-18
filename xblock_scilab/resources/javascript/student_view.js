@@ -30,22 +30,7 @@ function ScilabXBlockStudentView(runtime, element)
             xblock.find(".upload_do").text("Uploading... " + percent + "%");
         },
         done: function (e, data) {
-            console.log(data);
-            if (data.result.success !== undefined) {
-                state.message = {
-                    'message_type': 'error',
-                    'message_text': data.result.success
-                };
-                render(state);
-            }
-            else {
-                var state = JSON.parse(data.result.student_state);
-                if (data.result.message != undefined) {
-                    state.message = data.result.message;
-                    state.message_type = data.result.message_type;
-                }
-                render(state);
-            }
+            render(data.result);
         }
     };
 
@@ -59,7 +44,18 @@ function ScilabXBlockStudentView(runtime, element)
         upload_selected: get_template("script.scilab-template-upload-selected")
     };
 
-    var settings = {};
+    var deplainify = function(obj) {
+        for (var key in obj) {
+            try {
+                if (obj.hasOwnProperty(key)) {
+                    obj[key] = deplainify(JSON.parse(obj[key]));
+                }
+            } catch (e) {
+                console.log('failed to deplainify', obj);
+            }
+        }
+        return obj;
+    };
 
     /*================================================================================================================*/
 
@@ -68,27 +64,10 @@ function ScilabXBlockStudentView(runtime, element)
         var xblock = $(element).find('.ifmo-xblock-student');
         xblock.find('.ifmo-xblock-content').html(template.main(data));
 
-        if (settings.allow_submissions) {
+        if (data.allow_submissions) {
             xblock.find('.upload_container').html(template.upload_input());
             xblock.find(".file_upload").fileupload(upload_logic);
         }
-
-        xblock.find('.reset-celery-task-id').off('click').on('click', function(e) {
-            $.ajax({
-                url: urls.reset_task,
-                type: 'POST',
-                data: '{}',
-                dataType: 'json',
-                success: function (data) {
-                    var state = JSON.parse(data.result.student_state);
-                    if (data.result.message != undefined) {
-                        state.message = data.result.message;
-                        state.message_type = data.result.message_type;
-                    }
-                    render(state);
-                }
-            })
-        });
 
         $(element).find('.staff-get-state-btn').off('click').on('click', function(e) {
                 disable_controllers(element);
@@ -150,21 +129,15 @@ function ScilabXBlockStudentView(runtime, element)
 
     function init_xblock($, _)
     {
-        var xblock = $(element).find('.ifmo-xblock-student');
-        var data = xblock.data('student-state');
+        var xblock = $(element).find('.ifmo-xblock-base');
+        var context = xblock.data('context');
 
-        settings.allow_submissions = xblock.data('do-accept-submissions');
-
-        data.message = xblock.data('message');
-        data.message_type = xblock.data('message-type');
-        data.task_status = xblock.data('task-status');
-
-        var is_staff = xblock.attr("data-is-staff") == "True";
+        var is_staff = context.student_state.is_staff == true;
         if (is_staff) {
             $(element).find('.instructor-info-action').leanModal();
         }
 
-        render(data);
+        render(context);
     }
 
     $(function(){
