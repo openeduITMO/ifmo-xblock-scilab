@@ -16,6 +16,8 @@
         <div class="ifmo-xblock-message ifmo-xblock-message-<%= message.type %>"><%= message.text %></div>
         <% } %>
 
+    {% if not student_state.is_studio %}
+
         <% if (allow_submissions) { %>
 
             <% if (task_status == 'IDLE') { %>
@@ -31,6 +33,8 @@
                 Submissions are no longer accepted.
             </div>
         <% } %>
+
+    {% endif %}
 
     </script>
 
