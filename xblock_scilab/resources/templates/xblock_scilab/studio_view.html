@@ -22,15 +22,13 @@
                 <li class="field comp-setting-entry">
                     <div class="wrapper-comp-setting">
                         <label for="input_{{id}}_instructor_checker" class="label setting-label">Instructor checker archive</label>
-                        <div>
-                            <div style="position: relative; width: 400px; height: 43px; border: 1px solid darkgray; background-color: lightgray; border-radius: 3px; cursor: pointer">
-                                <input id="input_{{id}}_instructor_checker" class="setting-input instructor_checker" type="file" name="instructor_checker" style="opacity: 0; width: 100%; height: 100%; position: absolute"/>
-                                <span class="selected_instructor_checker">No checker selected</span>
-                            </div>
-                            <input type="button" class="upload_instructor_checker" value="Upload">
-                            <span class="tip setting-help">Архив инструктора должен содержать файл <b>checker.sce</b>. Этот сценарий должен создать файл <b>checker_output</b>, содержащий вещественное число от 0 до 1.</span>
+                        <div class="ifmo-xblock-scilab-studio-checker-container">
+                                <input id="input_{{id}}_instructor_checker" class="setting-input ifmo-xblock-scilab-studio-checker-file" type="file" name="instructor_checker"/>
+                                <div class="ifmo-xblock-scilab-studio-checker-selected">No checker selected</div>
                         </div>
+                        <input type="button" class="upload_instructor_checker ifmo-xblock-scilab-studio-checker-upload" value="Upload">
                     </div>
+                    <span class="tip setting-help">Архив инструктора должен содержать файл <b>checker.sce</b>. Этот сценарий должен создать файл <b>checker_output</b>, содержащий вещественное число от 0 до 1.</span>
                 </li>
 
                 <li class="field comp-setting-entry">

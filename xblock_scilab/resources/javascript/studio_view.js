@@ -7,14 +7,15 @@ function ScilabXBlockStudioView(runtime, element)
     var upload_logic = {
         url: runtime.handlerUrl(element, 'upload_instructor_checker'),
         add: function (e, data) {
-            element.find("span.selected_instructor_checker").html('Selected ' + data.files[0].name);
-            element.find("input.upload_instructor_checker").off('click').on('click', function () {
-                element.find("input.upload_instructor_checker").val('Uploading...');
+            element.find("div.ifmo-xblock-scilab-studio-checker-selected").html('Selected ' + data.files[0].name);
+            element.find("input.ifmo-xblock-scilab-studio-checker-upload").off('click').on('click', function () {
+                element.find("input.ifmo-xblock-scilab-studio-checker-upload").val('Uploading...');
                 data.submit();
             });
         },
         done: function (e, data) {
-                element.find("input.upload_instructor_checker").val('Upload');
+            alert('Checker successfully uploaded');
+            element.find("input.ifmo-xblock-scilab-studio-checker-upload").val('Upload');
         }
     };
 
@@ -46,7 +47,7 @@ function ScilabXBlockStudioView(runtime, element)
         var template = _.template(xblock.find('.ifmo-xblock-template-base').text());
         xblock.find('.ifmo-xblock-content').html(template(data));
 
-        xblock.find('input.instructor_checker').fileupload(upload_logic);
+        xblock.find('input.ifmo-xblock-scilab-studio-checker-file').fileupload(upload_logic);
     }
 
     $(function(){

@@ -3,3 +3,31 @@
     height: 300px;
     font-size: 1.6rem;
 }
+
+.ifmo-xblock-scilab-studio-checker-container {
+    width: 30%;
+    height: 43px;
+    border: 1px solid darkgray;
+    background-color: lightgray;
+    border-radius: 3px;
+    display: inline-block;
+    position: relative;
+}
+
+.ifmo-xblock-scilab-studio-checker-file {
+    opacity: 0;
+    width: 100% !important;
+    height: 100%;
+    position: absolute;
+    padding: 0 !important;
+    cursor: pointer;
+}
+
+.ifmo-xblock-scilab-studio-checker-selected {
+    padding: 10px;
+    display: inline-block;
+}
+
+.ifmo-xblock-scilab-studio-checker-upload {
+    width: 14% !important;
+}
