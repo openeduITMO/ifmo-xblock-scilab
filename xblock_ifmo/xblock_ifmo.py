@@ -164,7 +164,7 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
         return getattr(self.xmodule_runtime, 'user_is_staff', False)
 
     def _is_studio(self):
-        return self.scope_ids.user_id is None
+        return self.runtime.get_real_user is None
 
     def get_response_user_state(self, additional):
         context = self.get_student_context_base()
