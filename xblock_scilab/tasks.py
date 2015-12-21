@@ -20,7 +20,8 @@ logger = logging.getLogger(__name__)
 SCILAB_EXEC = "/ifmo/app/scilab-5.5.2/bin/scilab-adv-cli"
 SCILAB_STUDENT_CMD = "%s/solution.sce"
 SCILAB_INSTRUCTOR_CMD = "%s/checker.sce"
-SCILAB_EXEC_SCRIPT = "\"chdir('%s'); exec('%s'); exit(0);\""
+SCILAB_EXEC_SCRIPT = "chdir(\"%s\"); exec(\"%s\"); exit(0);"
+# SCILAB_EXEC_SCRIPT = "disp(1); exit(0);"
 SCILAB_HOME = "/ifmo/app/scilab-5.5.2"
 
 
@@ -99,7 +100,7 @@ class ScilabSubmissionGrade(GraderTaskBase):
         # Устанавливаем окружение
         env = os.environ.copy()
         env['SCIHOME'] = SCILAB_HOME
-        env['DISPLAY'] = ':1'
+        # env['DISPLAY'] = ':1'
         if isinstance(extra_env, dict):
             env.update(extra_env)
 
@@ -108,8 +109,9 @@ class ScilabSubmissionGrade(GraderTaskBase):
         # Если запускать его без шелла, то xcos не может отработать, поскольку
         # что-то ему не даёт подключиться к Xserver'у
         cmd = [SCILAB_EXEC, '-e', SCILAB_EXEC_SCRIPT % (cwd, filename), '-nb']
+        logger.info(" ".join(cmd))
         process = Popen(cmd,
-                        cwd=cwd, env=env, stdout=PIPE, bufsize=1,  shell=True,
+                        cwd=cwd, env=env, stdout=PIPE, bufsize=1,  shell=False,
                         preexec_fn=ScilabSubmissionGrade._demote())
         ScilabSubmissionGrade._set_non_block(process)
 
@@ -167,7 +169,7 @@ class ScilabSubmissionGrade(GraderTaskBase):
 
         # Процессу разрешено выполняться только 2 секунды
         filename = SCILAB_STUDENT_CMD % full_path
-        student_code = self._spawn_scilab(filename, timeout=15)
+        student_code = self._spawn_scilab(filename, timeout=5)
 
         instructor_filename = grader_payload.get('filename')
 
@@ -181,7 +183,7 @@ class ScilabSubmissionGrade(GraderTaskBase):
             )
 
         filename = SCILAB_INSTRUCTOR_CMD % full_path
-        checker_code = self._spawn_scilab(filename, timeout=30)
+        checker_code = self._spawn_scilab(filename, timeout=5)
 
         try:
             f = open(full_path + '/checker_output')
@@ -192,6 +194,20 @@ class ScilabSubmissionGrade(GraderTaskBase):
             )
 
         return _result(msg='OK', grade=result_grade)
+
+    def grade_success(self, student_input, grader_payload, system_payload, system, response):
+
+        module = system.get('module')
+
+        module.max_grade = 1.0
+        module.score = response.get('grade')
+
+        state = json.loads(module.state)
+        state['msg'] = response.get('msg')
+        state['points'] = module.score
+        module.state = json.dumps(state)
+
+        module.save()
 
     def grade_success(self, student_input, grader_payload, system_payload, system, response):
 

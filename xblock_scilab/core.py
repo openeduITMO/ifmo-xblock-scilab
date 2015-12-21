@@ -33,15 +33,15 @@ class ScilabXBlock(ScilabXBlockFields, IfmoXBlock):
         if context is None:
             context = dict()
 
-        context.update(self.get_student_context())
+        student_context = self.get_student_context()
 
         fragment = Fragment()
-        fragment.add_content(self.load_template('xblock_scilab/student_view.html', context))
+        fragment.add_content(self.load_template('xblock_scilab/student_view.html', student_context))
         fragment.add_css(self.load_css('student_view.css'))
         fragment.add_javascript(self.load_js('student_view.js'))
         fragment.initialize_js('ScilabXBlockStudentView')
 
-        return super(ScilabXBlock, self).student_view_base(fragment, context)
+        return super(ScilabXBlock, self).student_view_base(fragment, context, student_context)
 
     def studio_view(self, context):
 

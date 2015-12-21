@@ -101,7 +101,7 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
                 'state': "Модуль для указанного пользователя не существует."
             }
 
-    def student_view_base(self, fragment, context=None):
+    def student_view_base(self, fragment, context=None, student_context=None):
         """
         Изменяем фрагмент xblock'а. Оборачиваем весь шаблон в дополнительный.
         Все ресурсы оставляем без именений.
@@ -115,17 +115,18 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
         result.add_frag_resources(fragment)
         result.initialize_js(fragment.js_init_fn, fragment.json_init_args)
 
+        if not isinstance(student_context, dict):
+            student_context = dict()
+
         # Используем исходный контекст, но добавим тело
         new_context = self.get_student_context_base()
-        new_context.update(context)
+        new_context.update(student_context)
 
         return_context = new_context
         return_context.update({
             'body': fragment.body_html(),
             'context': json.dumps(new_context),
         })
-
-        print return_context
 
         # Тело оборачиваем отдельно
         result.add_content(self.load_template(
