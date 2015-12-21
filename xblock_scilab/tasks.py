@@ -208,17 +208,3 @@ class ScilabSubmissionGrade(GraderTaskBase):
         module.state = json.dumps(state)
 
         module.save()
-
-    def grade_success(self, student_input, grader_payload, system_payload, system, response):
-
-        module = system.get('module')
-
-        module.max_grade = 1.0
-        module.score = response.get('grade')
-
-        state = json.loads(module.state)
-        state['msg'] = response.get('msg')
-        state['points'] = module.score
-        module.state = json.dumps(state)
-
-        module.save()
