@@ -119,7 +119,7 @@ function ScilabXBlockStudentView(runtime, element)
         console.log(data.task_status);
         if (data.task_status != 'IDLE') {
             setTimeout(function(){
-                $.post(urls.get_state, function(data) {
+                $.post(urls.get_state, '{}', function(data) {
                     console.log('success, data = ', data);
                 }).fail(function(){
                     console.log('error');
