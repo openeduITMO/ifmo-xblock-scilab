@@ -17,3 +17,8 @@ class ScilabXBlockFields(IfmoXBlockFields):
         scope=Scope.user_state,
         default='IDLE',
     )
+
+    message = String(
+        scope=Scope.user_state,
+        default=None,
+    )

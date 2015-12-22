@@ -14,13 +14,14 @@ import logging
 from path import path
 from fcntl import fcntl, F_GETFL, F_SETFL
 from os import O_NONBLOCK, read
+import uuid
 
 logger = logging.getLogger(__name__)
 
 SCILAB_EXEC = "/ifmo/app/scilab-5.5.2/bin/scilab-adv-cli"
 SCILAB_STUDENT_CMD = "%s/solution.sce"
 SCILAB_INSTRUCTOR_CMD = "%s/checker.sce"
-SCILAB_EXEC_SCRIPT = "chdir(\"%s\"); exec(\"%s\"); exit(0);"
+SCILAB_EXEC_SCRIPT = "chdir(\"%s\"); exec(\"%s\");"
 # SCILAB_EXEC_SCRIPT = "disp(1); exit(0);"
 SCILAB_HOME = "/ifmo/app/scilab-5.5.2"
 
@@ -104,12 +105,18 @@ class ScilabSubmissionGrade(GraderTaskBase):
         if isinstance(extra_env, dict):
             env.update(extra_env)
 
+        # Для опредлеления того, завершился ли скрипт или ушёл в цикл скрипт,
+        # будем мониторить вывод
+        uid = str(uuid.uuid4())
+        script = SCILAB_EXEC_SCRIPT % (cwd, filename)
+        script += 'disp("%s");' % uuid
+
         # Запускаем процесс
         # TODO Найти, как запустить scilab без шелла
         # Если запускать его без шелла, то xcos не может отработать, поскольку
         # что-то ему не даёт подключиться к Xserver'у
         cmd = [SCILAB_EXEC, '-e', SCILAB_EXEC_SCRIPT % (cwd, filename), '-nb']
-        logger.info(" ".join(cmd))
+        logger.debug(" ".join(cmd))
         process = Popen(cmd,
                         cwd=cwd, env=env, stdout=PIPE, bufsize=1,  shell=False,
                         preexec_fn=ScilabSubmissionGrade._demote())
@@ -122,16 +129,19 @@ class ScilabSubmissionGrade(GraderTaskBase):
             logger.warning('Process timeout is not set. Now being in wait-state...')
             process.wait()
             output = ScilabSubmissionGrade._read_all(process)
+            return_code = process.returncode
         else:
             time.sleep(timeout)
             output = ScilabSubmissionGrade._read_all(process)
             process.kill()
-
-        logger.info(output)
+            if output.find(uid) != -1:
+                return_code = 0
+            else:
+                return_code = -1
 
         # Возвращаем результат исполнения
         return {
-            'code': process.returncode,
+            'code': return_code,
             'stdout': output,
         }
 
@@ -170,6 +180,8 @@ class ScilabSubmissionGrade(GraderTaskBase):
         # Процессу разрешено выполняться только 2 секунды
         filename = SCILAB_STUDENT_CMD % full_path
         student_code = self._spawn_scilab(filename, timeout=5)
+        if student_code.get('return_code') == -1:
+            return _result(msg='Timeout')
 
         instructor_filename = grader_payload.get('filename')
 
@@ -184,16 +196,19 @@ class ScilabSubmissionGrade(GraderTaskBase):
 
         filename = SCILAB_INSTRUCTOR_CMD % full_path
         checker_code = self._spawn_scilab(filename, timeout=5)
+        if checker_code.get('return_code') == -1:
+            return _result(msg='Instructor Timeout')
 
         try:
             f = open(full_path + '/checker_output')
-            result_grade = float(f.read().strip())
+            result_grade = float(f.readline().strip())
+            result_message = f.readline().strip()
         except IOError:
             return _result(
                 msg='(CORE) Не удалось определить результат проверки.'
             )
 
-        return _result(msg='OK', grade=result_grade)
+        return _result(msg=result_message, grade=result_grade)
 
     def grade_success(self, student_input, grader_payload, system_payload, system, response):
 
@@ -203,7 +218,7 @@ class ScilabSubmissionGrade(GraderTaskBase):
         module.score = response.get('grade')
 
         state = json.loads(module.state)
-        state['msg'] = response.get('msg')
+        state['message'] = response.get('msg')
         state['points'] = module.score
         module.state = json.dumps(state)
 

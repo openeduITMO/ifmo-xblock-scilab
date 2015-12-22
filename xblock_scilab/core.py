@@ -60,10 +60,18 @@ class ScilabXBlock(ScilabXBlockFields, IfmoXBlock):
     #==================================================================================================================#
 
     def get_student_context(self, user=None):
-        return {
+        context = {
             'allow_submissions': True if self.due is None or now() > self.due else False,
             'task_status': self.task_state,
         }
+        if self.message is not None:
+            context.update({
+                'message': {
+                    'text': self.message,
+                    'type': 'info',
+                }
+            })
+        return context
 
     def _get_instructor_context(self):
         return {
