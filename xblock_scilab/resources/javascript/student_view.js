@@ -125,7 +125,7 @@ function ScilabXBlockStudentView(runtime, element)
                 }).fail(function(){
                     console.log('error');
                 })
-            }, 3000);
+            }, 5000);
         }
     }
 
