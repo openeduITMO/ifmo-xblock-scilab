@@ -74,7 +74,7 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
         return result
 
     @XBlock.json_handler
-    def reset_user_data(self, data, suffix=''):
+    def reset_user_state(self, data, suffix=''):
         require(self._is_staff())
         module = self.get_module(data.get('user_login'))
         if module is not None:
@@ -91,7 +91,7 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
             }
 
     @XBlock.json_handler
-    def get_user_data(self, data, suffix=''):
+    def get_user_state(self, data, suffix=''):
         require(self._is_staff())
         module = self.get_module(data.get('user_login'))
         if module is not None:
@@ -100,6 +100,13 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
             return {
                 'state': "Модуль для указанного пользователя не существует."
             }
+
+    @XBlock.json_handler
+    def get_user_data(self, data, suffix=''):
+        context = self.get_student_context_base()
+        context.update(self.get_student_context())
+        return context
+
 
     def student_view_base(self, fragment, context=None, student_context=None):
         """

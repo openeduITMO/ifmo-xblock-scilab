@@ -3,8 +3,9 @@ function ScilabXBlockStudentView(runtime, element)
     var urls = {
         upload_logic: runtime.handlerUrl(element, 'upload_submission'),
         reset_task: runtime.handlerUrl(element, 'reset_celery_task_id'),
-        get_state: runtime.handlerUrl(element, 'get_user_data'),
-        reset_state: runtime.handlerUrl(element, 'reset_user_data')
+        get_state: runtime.handlerUrl(element, 'get_user_state'),
+        get_user_data: runtime.handlerUrl(element, 'get_user_data'),
+        reset_state: runtime.handlerUrl(element, 'reset_user_state')
     };
 
     var upload_logic = {
@@ -119,7 +120,7 @@ function ScilabXBlockStudentView(runtime, element)
         console.log(data.task_status);
         if (data.task_status != 'IDLE') {
             setTimeout(function(){
-                $.post(urls.get_state, '{}', function(data) {
+                $.post(urls.get_user_data, '{}', function(data) {
                     console.log('success, data = ', data);
                 }).fail(function(){
                     console.log('error');
