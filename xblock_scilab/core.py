@@ -138,6 +138,7 @@ class ScilabXBlock(ScilabXBlockFields, IfmoXBlock):
                 default_storage.delete(real_path)
             default_storage.save(real_path, uploaded_file)
 
+            self.task_state = 'QUEUED'
             task = reserve_task(
                 self,
                 grader_payload=self._get_grader_payload(instructor_real_path),
