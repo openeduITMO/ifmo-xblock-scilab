@@ -107,7 +107,6 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
         context.update(self.get_student_context())
         return context
 
-
     def student_view_base(self, fragment, context=None, student_context=None):
         """
         Изменяем фрагмент xblock'а. Оборачиваем весь шаблон в дополнительный.
