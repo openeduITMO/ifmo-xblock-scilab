@@ -25,3 +25,8 @@ class IfmoXBlockFields(object):
         scope=Scope.user_state,
         default=0,
     )
+
+    attempts = Integer(
+        scope=Scope.settings,
+        default=0,
+    )

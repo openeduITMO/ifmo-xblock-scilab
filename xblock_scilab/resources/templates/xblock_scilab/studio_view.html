@@ -21,6 +21,13 @@
 
                 <li class="field comp-setting-entry">
                     <div class="wrapper-comp-setting">
+                        <label for="input_{{id}}_attempts" class="label setting-label">Attempts</label>
+                        <input id="input_{{id}}_attempts" class="input setting-input" type="text" name="attempts" value="<%= attempts %>" />
+                    </div>
+                </li>
+
+                <li class="field comp-setting-entry">
+                    <div class="wrapper-comp-setting">
                         <label for="input_{{id}}_instructor_checker" class="label setting-label">Instructor checker archive</label>
                         <div class="ifmo-xblock-scilab-studio-checker-container">
                                 <input id="input_{{id}}_instructor_checker" class="setting-input ifmo-xblock-scilab-studio-checker-file" type="file" name="instructor_checker"/>

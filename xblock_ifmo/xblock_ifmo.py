@@ -55,6 +55,7 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
         self.display_name = data.get('display_name')
         self.description = data.get('description')
         self.weight = data.get('weight')
+        self.attempts = data.get('attempts')
         return {}
 
     def _get_score_string(self):
@@ -152,6 +153,7 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
                 'name': self.display_name,
                 'text': self.description,
                 'due': self.due,
+                'attempts': self.attempts,
             },
             'student_state': {
                 'score': {
