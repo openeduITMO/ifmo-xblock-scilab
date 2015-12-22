@@ -160,7 +160,7 @@ class ScilabXBlock(ScilabXBlockFields, IfmoXBlock):
         return _return_response({
             'message': {
                 'text': 'Your submission has been scheduled.',
-                'type': 'error',
+                'type': 'info',
             }
         })
 
