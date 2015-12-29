@@ -76,6 +76,11 @@ class ScilabServer(BaseHTTPRequestHandler):
 
             # Процессу разрешено выполняться только 2 секунды
             filename = full_path / SCILAB_STUDENT_SCRIPT
+
+            # Допишем функцию выходна, на всякий случай
+            with open(filename, "a") as source_file:
+                source_file.write("exit();")
+
             student_code = spawn_scilab(filename, timeout=40)
             if student_code.get('return_code') == -1:
                 return _result(msg='TL: Превышен лимит времени')
@@ -86,6 +91,11 @@ class ScilabServer(BaseHTTPRequestHandler):
                 return _result(msg='IAE: Не удалось открыть архив инструктора.')
 
             filename = full_path / SCILAB_INSTRUCTOR_SCRIPT
+
+            # Допишем функцию выхода, на всякий случай
+            with open(filename, "a") as source_file:
+                source_file.write("\nexit();\n")
+
             checker_code = spawn_scilab(filename, timeout=40)
             if checker_code.get('return_code') == -1:
                 return _result(msg='ITL: Превышен лимит времени инструктором')

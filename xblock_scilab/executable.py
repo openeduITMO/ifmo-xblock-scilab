@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 SCILAB_EXEC = "/opt/scilab-5.5.2/bin/scilab-adv-cli"
 #SCILAB_EXEC = "/ifmo/app/scilab-5.5.2/bin/scilab-adv-cli"
-SCILAB_EXEC_SCRIPT = "chdir(\"%s\"); exec(\"%s\");"
+SCILAB_EXEC_SCRIPT = "chdir(\"%s\"); exec(\"%s\"); exit();"
 SCILAB_HOME = "/opt/scilab-5.5.2"
 
 
