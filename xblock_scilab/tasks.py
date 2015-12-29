@@ -2,150 +2,34 @@
 
 from django.core.files.storage import default_storage
 from ifmo_celery_grader.tasks.helpers import GraderTaskBase
-from subprocess import Popen, PIPE
+
 
 import shutil
 import json
-import time
 import zipfile
-import os
-import pwd
 import logging
 from path import path
-from fcntl import fcntl, F_GETFL, F_SETFL
-from os import O_NONBLOCK, read
-import uuid
+
+import requests
+
+from xblock_scilab.executable import spawn_scilab
+from cStringIO import StringIO
 
 logger = logging.getLogger(__name__)
 
-SCILAB_EXEC = "/ifmo/app/scilab-5.5.2/bin/scilab-adv-cli"
-SCILAB_STUDENT_CMD = "%s/solution.sce"
-SCILAB_INSTRUCTOR_CMD = "%s/checker.sce"
+SCILAB_EXEC = path("/opt/scilab-5.5.2/bin/scilab-adv-cli")
+#SCILAB_EXEC = path("/ifmo/app/scilab-5.5.2/bin/scilab-adv-cli")
+SCILAB_STUDENT_SCRIPT = "solution.sce"
+SCILAB_INSTRUCTOR_SCRIPT = "checker.sce"
 SCILAB_EXEC_SCRIPT = "chdir(\"%s\"); exec(\"%s\");"
 # SCILAB_EXEC_SCRIPT = "disp(1); exit(0);"
-SCILAB_HOME = "/ifmo/app/scilab-5.5.2"
+SCILAB_HOME = path("/ifmo/app/scilab-5.5.2")
+TMP_PATH = path('/tmp/xblock_scilab/')
 
 
 class ScilabSubmissionGrade(GraderTaskBase):
 
-    @staticmethod
-    def _demote(user_uid=os.geteuid(), user_gid=os.getegid()):
-        """
-        Устанавливаем пользователя и группу, необходимо для инициализации
-        дочернего процесса.
-
-        :param user_uid: Пользователь
-        :param user_gid: Группа
-        :return: Инициализирующая функция
-        """
-        def result():
-            os.seteuid(user_uid)
-            os.setegid(user_gid)
-            os.setpgrp()
-        return result
-
-    @staticmethod
-    def _read_all(process):
-        """
-        Читает stdout из процесса. Он должен быть запущен в неблокирующем
-        режиме вывода.
-
-        См. http://eyalarubas.com/python-subproc-nonblock.html
-
-        :param process: Процесс
-        :return: Вывод процесса
-        """
-        result = ''
-        file_desc = process.stdout.fileno()
-        while True:
-            try:
-                data = read(file_desc, 1024)
-                if data == '': break
-                result += data
-            except OSError:
-                break
-        return result
-
-    @staticmethod
-    def _set_non_block(process):
-        """
-        Устанавилвает stdout в неблокирующий режим.
-
-        См. http://eyalarubas.com/python-subproc-nonblock.html
-
-        :param process: Процесс
-        :return:
-        """
-        flags = fcntl(process.stdout, F_GETFL)
-        fcntl(process.stdout, F_SETFL, flags | O_NONBLOCK)
-
-    def _spawn_scilab(self, filename, cwd=None, timeout=None, extra_env=None):
-        """
-        Запускает инстанс scilab'а с указанным файлом и параметрами. Возвращает
-        результат выполнения.
-
-        :param filename: Имя файла для исполнения
-        :param cwd: Рабочая директория, по умолчанию является директориией, где
-                    располагается скрипт для исполнения
-        :param timeout: Время на исполнение в секундах
-        :param extra_env: Дополнительные переменные окружения
-        :return: Результат выполнения
-        """
-
-        # Устанавливаем рабочую директорию, если необходимо
-        if cwd is None:
-            cwd = path(filename).dirname()
-            logger.warning("No cwd specified for scilab_spawn, "
-                           "default is used: %s", cwd)
-
-        # Устанавливаем окружение
-        env = os.environ.copy()
-        env['SCIHOME'] = SCILAB_HOME
-        # env['DISPLAY'] = ':1'
-        if isinstance(extra_env, dict):
-            env.update(extra_env)
-
-        # Для опредлеления того, завершился ли скрипт или ушёл в цикл скрипт,
-        # будем мониторить вывод
-        uid = str(uuid.uuid4())
-        script = SCILAB_EXEC_SCRIPT % (cwd, filename)
-        script += 'disp("%s");' % uuid
-
-        # Запускаем процесс
-        # TODO Найти, как запустить scilab без шелла
-        # Если запускать его без шелла, то xcos не может отработать, поскольку
-        # что-то ему не даёт подключиться к Xserver'у
-        cmd = [SCILAB_EXEC, '-e', SCILAB_EXEC_SCRIPT % (cwd, filename), '-nb']
-        logger.debug(" ".join(cmd))
-        process = Popen(cmd,
-                        cwd=cwd, env=env, stdout=PIPE, bufsize=1,  shell=False,
-                        preexec_fn=ScilabSubmissionGrade._demote())
-        ScilabSubmissionGrade._set_non_block(process)
-
-        # Убиваем по таймауту или ждём окончания исполнения, если он не задан
-        if timeout is None:
-            # Скорей всего, в этом случае произойдёт блокировка намертво,
-            # поскольку scilab сам не завершится, поэтому timeout нужно задать
-            logger.warning('Process timeout is not set. Now being in wait-state...')
-            process.wait()
-            output = ScilabSubmissionGrade._read_all(process)
-            return_code = process.returncode
-        else:
-            time.sleep(timeout)
-            output = ScilabSubmissionGrade._read_all(process)
-            process.kill()
-            if output.find(uid) != -1:
-                return_code = 0
-            else:
-                return_code = -1
-
-        # Возвращаем результат исполнения
-        return {
-            'code': return_code,
-            'stdout': output,
-        }
-
-    def grade(self, student_input, grader_payload):
+    def grade_old(self, student_input, grader_payload):
         """
 
         :param student_input:
@@ -154,7 +38,7 @@ class ScilabSubmissionGrade(GraderTaskBase):
         """
 
         def _cleanup():
-            shutil.rmtree(full_path, ignore_errors=True)
+            full_path.rmtree_p()
 
         def _result(msg=None, grade=0., cleanup=False):
             if cleanup:
@@ -164,40 +48,43 @@ class ScilabSubmissionGrade(GraderTaskBase):
                 'grade': grade,
             }
 
-        filename = student_input.get('filename')
-        if not filename.endswith('.zip'):
-            raise Exception('Uploaded file is not zip archive.')
-
-        file_path = filename[:-4]
-        full_path = '/tmp/xblock_scilab/' + file_path
-
-        _cleanup()
-
-        f = default_storage.open(filename)
-        student_archive = zipfile.ZipFile(f)
-        student_archive.extractall(full_path)
-
-        # Процессу разрешено выполняться только 2 секунды
-        filename = SCILAB_STUDENT_CMD % full_path
-        student_code = self._spawn_scilab(filename, timeout=5)
-        if student_code.get('return_code') == -1:
-            return _result(msg='Timeout')
-
+        # Относительное имя файла студента, <course_id>/<module>/<file_sha>.zip
+        student_filename = path(student_input.get('filename'))
         instructor_filename = grader_payload.get('filename')
 
-        try:
-            f = default_storage.open(instructor_filename)
-            instructor_archive = zipfile.ZipFile(f)
-            instructor_archive.extractall(full_path)
-        except:
-            return _result(
-                msg='(IAE) Не удалось инициализировать архив инструктора.'
-            )
+        # Проверка на то, что это действительно zip
+        if not student_filename.ext != '.zip':
+            raise Exception('NZ: Загруженный файл должен быть .zip.')
 
-        filename = SCILAB_INSTRUCTOR_CMD % full_path
-        checker_code = self._spawn_scilab(filename, timeout=5)
+        # Полный рабочий путь в системе, со временной директорией, сразу вычистим
+        full_path = TMP_PATH / student_filename.stripext()
+        _cleanup()
+
+        # Получаем архивы
+        student_archive = zipfile.ZipFile(default_storage.open(student_filename))
+        instructor_archive = zipfile.ZipFile(default_storage.open(instructor_filename))
+
+        # Извлекаем архив студента
+        try:
+            student_archive.extractall(full_path)
+        except Exception:
+            return _result(msg='SAE: Не удалось открыть архив с ответом.')
+
+        # Процессу разрешено выполняться только 2 секунды
+        filename = full_path / SCILAB_STUDENT_SCRIPT
+        student_code = spawn_scilab(filename, timeout=40)
+        if student_code.get('return_code') == -1:
+            return _result(msg='TL: Превышен лимит времени')
+
+        try:
+            instructor_archive.extractall(full_path)
+        except Exception:
+            return _result(msg='IAE: Не удалось открыть архив инструктора.')
+
+        filename = full_path / SCILAB_INSTRUCTOR_SCRIPT
+        checker_code = spawn_scilab(filename, timeout=40)
         if checker_code.get('return_code') == -1:
-            return _result(msg='Instructor Timeout')
+            return _result(msg='ITL: Превышен лимит времени инструктором')
 
         try:
             f = open(full_path + '/checker_output')
@@ -205,7 +92,7 @@ class ScilabSubmissionGrade(GraderTaskBase):
             result_message = f.readline().strip()
         except IOError:
             return _result(
-                msg='(CORE) Не удалось определить результат проверки.'
+                msg='COE: Не удалось определить результат проверки.'
             )
 
         return _result(msg=result_message, grade=result_grade)
@@ -223,3 +110,31 @@ class ScilabSubmissionGrade(GraderTaskBase):
         module.state = json.dumps(state)
 
         module.save()
+
+    #=========================================================================================================
+
+    def grade(self, student_input, grader_payload):
+
+        filename = student_input.get('filename')
+        instructor_filename = grader_payload.get('filename')
+        files = {
+            'student_file': default_storage.open(filename),
+            'instructor_file': default_storage.open(instructor_filename),
+        }
+        data = {
+            'student_input': json.dumps(student_input),
+            'grader_payload': json.dumps(grader_payload),
+        }
+        r = requests.post('http://192.168.10.13:8003', data=data, files=files)
+        try:
+            result = r.json()
+            return {
+                'grade': result.get('grade'),
+                'msg': result.get('msg'),
+            }
+        except Exception as e:
+            return {
+                'grade': 0,
+                'msg': e.message,
+            }
+

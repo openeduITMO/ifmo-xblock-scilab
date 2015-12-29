@@ -1,1 +1,1 @@
-from .core import ScilabXBlock
+# from .core import ScilabXBlock

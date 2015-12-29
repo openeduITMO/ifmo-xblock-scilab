@@ -80,6 +80,7 @@ class ScilabXBlock(ScilabXBlockFields, IfmoXBlock):
                 'display_name': self.display_name,
                 'description': self.description,
                 'weight': self.weight,
+                'attempts': self.attempts,
             }),
         }
 
