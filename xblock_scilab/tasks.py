@@ -115,13 +115,16 @@ class ScilabSubmissionGrade(GraderTaskBase):
         r = requests.post(SCLAB_SERVER_URL, data=data, files=files)
         try:
             result = r.json()
+            msg = 'Балл за выполнение работы: %s.' % result.get('grade')
+            if result.get('msg'):
+                msg += ' Комментарий проверяющего сервера: <i>%s</i>' % result.get('msg')
             return {
                 'grade': result.get('grade'),
-                'msg': result.get('msg'),
+                'msg': msg,
             }
         except Exception as e:
             return {
                 'grade': 0,
-                'msg': e.message,
+                'msg': 'При проверке решения произошла следующая ошибка: <i>%s</i>' % e.message,
             }
 
