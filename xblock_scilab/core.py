@@ -109,7 +109,7 @@ class ScilabXBlock(ScilabXBlockFields, IfmoXBlock):
             if task.task_state not in ScilabSubmission.IDLE_STATUSES:
                 return _return_response({
                     'message': {
-                        'text': 'Another task is already running or scheduled.',
+                        'text': 'Проверка другого решения уже запущена.',
                         'type': 'error',
                     }
                 })
@@ -161,14 +161,14 @@ class ScilabXBlock(ScilabXBlockFields, IfmoXBlock):
         except Exception as e:
             return _return_response({
                 'message': {
-                    'text': 'Error occurred while scheduling your submission: ' + e.message,
+                    'text': 'Ошибка при попытке поставить проверку решения в очередь: ' + e.message,
                     'type': 'error',
                 }
             })
 
         return _return_response({
             'message': {
-                'text': 'Your submission has been scheduled.',
+                'text': 'Решение поставлено в очередь на проверку.',
                 'type': 'info',
             }
         })
