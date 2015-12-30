@@ -7,16 +7,12 @@ import uuid
 import time
 import os
 import logging
-from path import path
 import signal
+
+from xblock_scilab.settings import *
 
 logger = logging.getLogger(__name__)
 
-
-SCILAB_EXEC = "/opt/scilab-5.5.2/bin/scilab-adv-cli"
-#SCILAB_EXEC = "/ifmo/app/scilab-5.5.2/bin/scilab-adv-cli"
-SCILAB_EXEC_SCRIPT = "chdir(\"%s\"); exec(\"%s\"); exit();"
-SCILAB_HOME = "/opt/scilab-5.5.2"
 
 
 def demote(user_uid=os.geteuid(), user_gid=os.getegid()):
