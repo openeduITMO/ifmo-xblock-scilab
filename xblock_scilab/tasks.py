@@ -3,28 +3,15 @@
 from django.core.files.storage import default_storage
 from ifmo_celery_grader.tasks.helpers import GraderTaskBase
 
-
-import shutil
 import json
-import zipfile
 import logging
-from path import path
-
 import requests
+import zipfile
 
 from xblock_scilab.executable import spawn_scilab
-from cStringIO import StringIO
+from xblock_scilab.settings import *
 
 logger = logging.getLogger(__name__)
-
-SCILAB_EXEC = path("/opt/scilab-5.5.2/bin/scilab-adv-cli")
-#SCILAB_EXEC = path("/ifmo/app/scilab-5.5.2/bin/scilab-adv-cli")
-SCILAB_STUDENT_SCRIPT = "solution.sce"
-SCILAB_INSTRUCTOR_SCRIPT = "checker.sce"
-SCILAB_EXEC_SCRIPT = "chdir(\"%s\"); exec(\"%s\");"
-# SCILAB_EXEC_SCRIPT = "disp(1); exit(0);"
-SCILAB_HOME = path("/ifmo/app/scilab-5.5.2")
-TMP_PATH = path('/tmp/xblock_scilab/')
 
 
 class ScilabSubmissionGrade(GraderTaskBase):
@@ -125,7 +112,7 @@ class ScilabSubmissionGrade(GraderTaskBase):
             'student_input': json.dumps(student_input),
             'grader_payload': json.dumps(grader_payload),
         }
-        r = requests.post('http://192.168.10.13:8003', data=data, files=files)
+        r = requests.post(SCLAB_SERVER_URL, data=data, files=files)
         try:
             result = r.json()
             return {

@@ -1,24 +1,19 @@
 # -*- coding=utf-8 -*-
 
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
-import logging
-import sys
 from cgi import FieldStorage
-import json
 from cStringIO import StringIO
-from path import path
+
+import sys
+import json
+import logging
 import zipfile
 
 from xblock_scilab.executable import spawn_scilab
+from xblock_scilab.settings import *
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler(sys.stdout))
-
-PORT = 8003
-
-SCILAB_STUDENT_SCRIPT = "solution.sce"
-SCILAB_INSTRUCTOR_SCRIPT = "checker.sce"
-TMP_PATH = path('/tmp/xblock_scilab/')
 
 
 class ScilabServer(BaseHTTPRequestHandler):
@@ -119,8 +114,8 @@ class ScilabServer(BaseHTTPRequestHandler):
 
 
 def main():
-    print ("Start listening on port %s" % PORT)
-    server = HTTPServer(("", PORT), ScilabServer)
+    print ("Start listening on port %s" % SCLAB_SERVER_PORT)
+    server = HTTPServer(("", SCLAB_SERVER_PORT), ScilabServer)
     server.serve_forever()
 
 if __name__ == "__main__":
