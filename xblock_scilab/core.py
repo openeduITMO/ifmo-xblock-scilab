@@ -10,6 +10,7 @@ from xblock.core import XBlock
 from xblock.fragment import Fragment
 from xblock_ifmo.utils import now
 from xblock_ifmo.xblock_ifmo import IfmoXBlock
+from xblock_ifmo.xblock_xqueue import XBlockXQueueMixin
 from xblock_scilab.models import ScilabSubmission
 from xblock_scilab.tasks import ScilabSubmissionGrade
 from xblock_scilab.utils import get_sha1, file_storage_path
@@ -21,7 +22,7 @@ import json
 import mimetypes
 
 
-class ScilabXBlock(ScilabXBlockFields, IfmoXBlock):
+class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
 
     package = __package__
 
@@ -60,6 +61,7 @@ class ScilabXBlock(ScilabXBlockFields, IfmoXBlock):
     #==================================================================================================================#
 
     def get_student_context(self, user=None):
+        # TODO: Parents should declare what they provide for student context
         context = {
             'allow_submissions': True if self.due is None or now() > self.due else False,
             'task_status': self.task_state,
@@ -74,6 +76,7 @@ class ScilabXBlock(ScilabXBlockFields, IfmoXBlock):
         return context
 
     def _get_instructor_context(self):
+        # TODO: Parents should declare what they provide for instructor context
         return {
             'id': self.scope_ids.usage_id,
             'metadata': json.dumps({
@@ -81,6 +84,7 @@ class ScilabXBlock(ScilabXBlockFields, IfmoXBlock):
                 'description': self.description,
                 'weight': self.weight,
                 'attempts': self.attempts,
+                'queue_name': self.queue_name,
             }),
         }
 
@@ -88,8 +92,8 @@ class ScilabXBlock(ScilabXBlockFields, IfmoXBlock):
 
     @XBlock.json_handler
     def save_settings(self, data, suffix):
-        result = super(ScilabXBlock, self).save_settings_base(data)
-        return json.dumps(result)
+        result = super(ScilabXBlock, self).save_settings(data)
+        return result
 
     @XBlock.json_handler
     def user_state(self, data, suffix=''):

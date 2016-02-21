@@ -36,7 +36,7 @@ setup(
     ],
     entry_points={
         'xblock.v1': [
-            'ifmo_xblock_scilab = xblock_scilab:ScilabXBlock',
+            'ifmo_xblock_scilab = xblock_scilab.core:ScilabXBlock',
         ]
     },
 )

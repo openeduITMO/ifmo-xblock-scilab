@@ -14,7 +14,6 @@ from .xblock_ifmo_fields import IfmoXBlockFields
 from .xblock_ifmo_resources import IfmoXBlockResources
 
 from webob.response import Response
-from webob.exc import HTTPBadRequest
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +42,7 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
     def max_score(self):
         return self.weight
 
-    def save_settings_base(self, data):
+    def save_settings(self, data):
         """
         Не является обработчиком сам по себе, однако, его могут (и должны)
         использовать дочерние обработчики, когда требуется сохранение
@@ -52,6 +51,10 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
         :param data:
         :return:
         """
+        parent = super(IfmoXBlock, self)
+        if hasattr(parent, 'save_settings'):
+            parent.save_settings(data)
+
         self.display_name = data.get('display_name')
         self.description = data.get('description')
         self.weight = data.get('weight')
