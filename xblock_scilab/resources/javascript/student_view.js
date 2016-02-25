@@ -114,7 +114,7 @@ function ScilabXBlockStudentView(runtime, element)
             });
 
         if (data.task_status == 'QUEUED') {
-            disable_controllers(element);
+            //disable_controllers(element);
         }
 
         console.log(data.task_status);

@@ -1,8 +1,9 @@
 # -*- coding=utf-8 -*-
 
 from xblock.core import XBlock
-from xqueue_api.utils import now, make_hashkey
+from xqueue_api.utils import now, make_hashkey, default_time
 from xblock.fields import Scope, String
+import json
 
 
 class XBlockXQueueMixin(XBlock):
@@ -25,12 +26,23 @@ class XBlockXQueueMixin(XBlock):
     def get_queue_interface(self):
         return self.xmodule_runtime.xqueue['interface']
 
+    @default_time
     def get_queue_key(self, qtime=None):
-
-        if qtime is None:
-            qtime = now()
-
         make_hashkey(str(self.xmodule_runtime.seed) + qtime + self.runtime.anonymous_student_id)
 
     def get_dispatched_url(self, dispatch='score_update'):
         return self.xmodule_runtime.xqueue['construct_callback'](dispatch)
+
+    def get_submission_header(self, dispatch='score_update'):
+        return json.dumps({
+            'lms_callback_url': self.get_dispatched_url(dispatch),
+            'lms_key': self.get_queue_key(),
+            'queue_name': self.queue_name,
+        })
+
+    @default_time
+    def get_queue_student_info(self, qtime=None):
+        return json.dumps({
+            'anonymous_student_id': self.xmodule_runtime.anonymous_student_id,
+            'submission_time': qtime
+        })

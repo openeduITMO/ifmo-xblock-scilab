@@ -18,3 +18,14 @@ def now():
     :return: Время в UTC
     """
     return datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+
+
+def default_time(fn):
+    # TODO: This decorator cannot be loaded form ifmo_xblock.utils. WHY?!
+    def default_timed(**kwargs):
+        qtime = kwargs.get('qtime')
+        if qtime is None:
+            qtime = now()
+        kwargs['qtime'] = qtime
+        return fn(**kwargs)
+    return default_timed

@@ -14,6 +14,8 @@ from xblock_ifmo.xblock_xqueue import XBlockXQueueMixin
 from xblock_scilab.models import ScilabSubmission
 from xblock_scilab.tasks import ScilabSubmissionGrade
 from xblock_scilab.utils import get_sha1, file_storage_path
+from submissions import api as submissions_api
+from base64 import b64encode
 
 
 from .fields import ScilabXBlockFields
@@ -100,6 +102,24 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         # TODO: Do user_state more like save_settings
         return self.get_response_user_state(self.get_student_context())
 
+    def student_submission_id(self, submission_id=None):
+        # pylint: disable=no-member
+        """
+        Returns dict required by the submissions app for creating and
+        retrieving submissions for a particular student.
+        """
+        if submission_id is None:
+            submission_id = self.xmodule_runtime.anonymous_student_id
+            assert submission_id != (
+                'MOCK', "Forgot to call 'personalize' in test."
+            )
+        return {
+            "student_id": submission_id,
+            "course_id": self.course_id,
+            "item_id": self.location.block_id,
+            "item_type": 'scilab_xblock',  # ???
+        }
+
     @XBlock.handler
     def upload_submission(self, request, suffix):
 
@@ -119,48 +139,55 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
                 })
 
         try:
+            # Извлечение данных о загруженном файле
             upload = request.params['submission']
             uploaded_file = File(upload.file)
+            uploaded_filename = upload.file.name
             uploaded_sha1 = get_sha1(upload.file)
+            uploaded_mimetype = mimetypes.guess_type(upload.file.name)[0]
 
-            real_path = file_storage_path(
-                self.location,
-                uploaded_sha1,
-                upload.file.name
-            )
+            # Реальные названия файлов в ФС
+            real_path = file_storage_path(self.location, uploaded_sha1, uploaded_filename)
+            instructor_real_path = file_storage_path(self.location, 'instructor_checker', 'instructor_checker.zip')
 
-            instructor_real_path = file_storage_path(
-                self.location,
-                'instructor_checker',
-                'instructor_checker.zip'
-            )
+            # Сохраняем данные о решении
+            student_id = self.student_submission_id()
+            student_answer = {
+                "sha1": uploaded_sha1,
+                "filename": uploaded_filename,
+                "mimetype": uploaded_mimetype,
+                "real_path": real_path,
+                "instructor_real_path": instructor_real_path,
+            }
+            submission = submissions_api.create_submission(student_id, student_answer)
 
-            submission = ScilabSubmission.objects.create(
-                user=User.objects.get(id=self.scope_ids.user_id),
-                filename=upload.file.name,
-                mimetype=mimetypes.guess_type(upload.file.name)[0],
-                sha_1=uploaded_sha1,
-                course=unicode(self.course_id),
-                module=unicode(self.location),
-                size=uploaded_file.size,
-                real_filename=real_path,
-                status=ScilabSubmission.STATUS_QUEUED
-            )
-
+            # Сохраняем файл с решением
             if default_storage.exists(real_path):
                 default_storage.delete(real_path)
             default_storage.save(real_path, uploaded_file)
 
+            # Отправляем решение в очередь
             self.task_state = 'QUEUED'
-            task = reserve_task(
-                self,
-                grader_payload=self._get_grader_payload(instructor_real_path),
-                system_payload=self._get_system_payload(),
-                student_input=self._get_student_input(submission),
-                task_type='SCILAB_CHECK',
-                save=True,
-            )
-            submit_task_grade(ScilabSubmissionGrade, task)
+
+            payload = {
+                'student_info': self.get_queue_student_info(),
+                'grader_payload': '',
+                'student_response': self.get_queue_student_response(submission),
+            }
+
+            qinterface = self.get_queue_interface()
+            qinterface.send_to_queue(header=self.get_submission_header(),
+                                     body=json.dumps(payload))
+
+            # task = reserve_task(
+            #     self,
+            #     grader_payload=self._get_grader_payload(instructor_real_path),
+            #     system_payload=self._get_system_payload(),
+            #     student_input=self._get_student_input(submission),
+            #     task_type='SCILAB_CHECK',
+            #     save=True,
+            # )
+            # submit_task_grade(ScilabSubmissionGrade, task)
 
         except Exception as e:
             return _return_response({
@@ -220,3 +247,27 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         return {
             'filename': submission.real_filename,
         }
+
+    @XBlock.handler
+    def get_submitted_archives(self, request, suffix):
+
+        def get_64_contents(filename):
+            with default_storage.open(filename, 'r') as f:
+                return b64encode(f.read())
+
+        # user_id = request.params['anonymous_user_id']
+        user_id = suffix
+        user_id = self.student_submission_id(submission_id=user_id)
+        submission = submissions_api.get_submission(user_id.get('student_id'))
+        answer = submission['answer']
+        return Response(json_body={
+            'user_archive': get_64_contents(answer.get('real_path')),
+            'instructor_archive': get_64_contents(answer.get('instructor_real_path'))
+        })
+
+    def get_queue_student_response(self, submission):
+        # TODO: Protect this with hash
+        base_url = self.runtime.handler_url(self, 'get_submitted_archives', thirdparty=True)
+        return json.dumps({
+            'archive_64_url': base_url + '/' + submission.get('uuid'),
+        })
