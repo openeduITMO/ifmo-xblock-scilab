@@ -1,24 +1,24 @@
 # -*- coding: utf-8 -*-
 
-from django.contrib.auth.models import User
 from django.core.files.base import File
 from django.core.files.storage import default_storage
 from ifmo_celery_grader.models import GraderTask
-from ifmo_celery_grader.tasks.helpers import reserve_task, submit_task_grade
 from webob.response import Response
 from xblock.core import XBlock
 from xblock.fragment import Fragment
 from xblock_ifmo.utils import now
 from xblock_ifmo.xblock_ifmo import IfmoXBlock
 from xblock_ifmo.xblock_xqueue import XBlockXQueueMixin
+from xblock_ifmo.xblock_ajax import AjaxHandlerMixin
 from xblock_scilab.models import ScilabSubmission
-from xblock_scilab.tasks import ScilabSubmissionGrade
 from xblock_scilab.utils import get_sha1, file_storage_path
 from submissions import api as submissions_api
 from base64 import b64encode
 
 
 from .fields import ScilabXBlockFields
+
+
 
 import json
 import mimetypes
@@ -29,7 +29,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
     package = __package__
 
     # Use this unless submissions api is used
-    always_recalculate_grades = True
+    # always_recalculate_grades = True
 
     def student_view(self, context):
 
@@ -176,8 +176,8 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             }
 
             qinterface = self.get_queue_interface()
-            qinterface.send_to_queue(header=self.get_submission_header(),
-                                     body=json.dumps(payload))
+            qinterface.send_to_queue(header=self.get_submission_header(prefix=submission.get('uuid')),
+                                     body=json.dumps(payload),)
 
             # task = reserve_task(
             #     self,
@@ -261,8 +261,10 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         submission = submissions_api.get_submission(user_id.get('student_id'))
         answer = submission['answer']
         return Response(json_body={
+            'user_archive_name': answer.get('real_path'),
             'user_archive': get_64_contents(answer.get('real_path')),
-            'instructor_archive': get_64_contents(answer.get('instructor_real_path'))
+            'instructor_archive_name': answer.get('instructor_real_path'),
+            'instructor_archive': get_64_contents(answer.get('instructor_real_path')),
         })
 
     def get_queue_student_response(self, submission):
@@ -270,4 +272,25 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         base_url = self.runtime.handler_url(self, 'get_submitted_archives', thirdparty=True)
         return json.dumps({
             'archive_64_url': base_url + '/' + submission.get('uuid'),
+        })
+
+    @AjaxHandlerMixin.xqueue_callback
+    def score_update(self, submission_result):
+
+        parent = super(ScilabXBlock, self)
+        if hasattr(parent, 'score_update'):
+            parent.score_update(submission_result)
+
+        submission_uid, validation_key = submission_result.lms_key.split('+')
+
+        # TODO: Validate submission
+        # submission = submissions_api.get_submission(submission_uid)
+
+        submissions_api.set_score(submission_uid, int(100*submission_result.score), 100)
+
+        self.points = submission_result.score
+        self.task_state = 'IDLE'
+        self.runtime.publish(self, 'grade', {
+                'value': submission_result.score * self.max_score(),
+                'max_value': self.max_score()
         })
