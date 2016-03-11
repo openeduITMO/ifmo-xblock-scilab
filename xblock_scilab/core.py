@@ -66,7 +66,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         # TODO: Parents should declare what they provide for student context
         context = {
             'allow_submissions': True if self.due is None or now() > self.due else False,
-            'task_status': self.queue_state,
+            'task_status': self.queue_state or 'IDLE',
         }
         if self.message is not None:
             context.update({

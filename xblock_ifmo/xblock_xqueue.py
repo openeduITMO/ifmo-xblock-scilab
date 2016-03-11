@@ -17,7 +17,8 @@ class XBlockXQueueMixin(AjaxHandlerMixin, XBlock):
     )
 
     queue_state = String(
-        scope=Scope.user_state
+        scope=Scope.user_state,
+        default="IDLE",
     )
 
     queue_details = Dict(
