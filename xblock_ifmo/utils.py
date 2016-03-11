@@ -29,3 +29,19 @@ def default_time(fn):
         kwargs['qtime'] = qtime
         return fn(**kwargs)
     return default_timed
+
+
+def reify(meth):
+    """
+    Decorator which caches value so it is only computed once.
+    Keyword arguments:
+    inst
+    """
+    def getter(inst):
+        """
+        Set value to meth name in dict and returns value.
+        """
+        value = meth(inst)
+        inst.__dict__[meth.__name__] = value
+        return value
+    return property(getter)

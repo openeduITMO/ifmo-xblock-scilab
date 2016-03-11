@@ -66,7 +66,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         # TODO: Parents should declare what they provide for student context
         context = {
             'allow_submissions': True if self.due is None or now() > self.due else False,
-            'task_status': self.task_state,
+            'task_status': self.queue_state,
         }
         if self.message is not None:
             context.update({
@@ -128,15 +128,13 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             response.update(response_update)
             return self.get_response_user_state(response)
 
-        if self.celery_task_id is not None:
-            task = GraderTask.objects.get(task_id=self.celery_task_id)
-            if task.task_state not in ScilabSubmission.IDLE_STATUSES:
-                return _return_response({
-                    'message': {
-                        'text': 'Проверка другого решения уже запущена.',
-                        'type': 'error',
-                    }
-                })
+        if self.queue_state not in ScilabSubmission.IDLE_STATUSES:
+            return _return_response({
+                'message': {
+                    'text': 'Проверка другого решения уже запущена.',
+                    'type': 'error',
+                }
+            })
 
         try:
             # Извлечение данных о загруженном файле
@@ -167,17 +165,18 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             default_storage.save(real_path, uploaded_file)
 
             # Отправляем решение в очередь
-            self.task_state = 'QUEUED'
+            self.queue_state = 'QUEUED'
 
             payload = {
-                'student_info': self.get_queue_student_info(),
+                'student_info': self.queue_student_info,
                 'grader_payload': '',
                 'student_response': self.get_queue_student_response(submission),
             }
 
-            qinterface = self.get_queue_interface()
-            qinterface.send_to_queue(header=self.get_submission_header(prefix=submission.get('uuid')),
-                                     body=json.dumps(payload),)
+            self.send_to_queue(
+                header=self.get_submission_header(access_key_prefix=submission.get('uuid')),
+                body=json.dumps(payload)
+            )
 
             # task = reserve_task(
             #     self,
@@ -289,7 +288,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         submissions_api.set_score(submission_uid, int(100*submission_result.score), 100)
 
         self.points = submission_result.score
-        self.task_state = 'IDLE'
+        self.queue_state = 'IDLE'
         self.runtime.publish(self, 'grade', {
                 'value': submission_result.score * self.max_score(),
                 'max_value': self.max_score()
