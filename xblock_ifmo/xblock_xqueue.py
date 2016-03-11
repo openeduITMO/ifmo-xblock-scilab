@@ -5,7 +5,7 @@ from xqueue_api.utils import now, make_hashkey, create_student_info
 from xblock.fields import Scope, String, Dict
 import json
 from .xblock_ajax import AjaxHandlerMixin
-from xblock_ifmo.utils import reify
+from .utils import reify
 
 
 class XBlockXQueueMixin(AjaxHandlerMixin, XBlock):
