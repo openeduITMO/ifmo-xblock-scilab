@@ -174,7 +174,10 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             }
 
             self.send_to_queue(
-                header=self.get_submission_header(access_key_prefix=submission.get('uuid')),
+                header=self.get_submission_header(
+                    access_key_prefix=submission.get('uuid'),
+                    extra={'method': 'check'}
+                ),
                 body=json.dumps(payload)
             )
 

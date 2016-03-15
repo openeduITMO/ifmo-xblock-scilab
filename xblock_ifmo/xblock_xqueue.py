@@ -55,12 +55,16 @@ class XBlockXQueueMixin(AjaxHandlerMixin, XBlock):
     def get_dispatched_url(self, dispatch='score_update'):
         return self.xmodule_runtime.xqueue['construct_callback'](dispatch)
 
-    def get_submission_header(self, dispatch='score_update', access_key_prefix=''):
-        return json.dumps({
+    def get_submission_header(self, dispatch='score_update', access_key_prefix='', extra=None):
+        result = {
             'lms_callback_url': self.get_dispatched_url(dispatch),
             'lms_key': "+".join([access_key_prefix, self.queue_key]),
             'queue_name': self.queue_name,
-        })
+        }
+        if extra is not None:
+            assert isinstance(extra, dict)
+            result.update(extra)
+        return json.dumps(result)
 
     def send_to_queue(self, header=None, body=None):
         self.queue_details = {
