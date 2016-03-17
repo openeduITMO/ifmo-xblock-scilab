@@ -16,7 +16,9 @@
             </div>
         <% } %>
 
-        <div class="task"><%= meta.text %></div>
+        <% if (task_with_pregenerated) { %>
+            <div class="task"><%= task_with_pregenerated %></div>
+        <% } %>
 
         <% if (typeof message != 'undefined') { %>
         <div class="ifmo-xblock-message ifmo-xblock-message-<%= message.type %>"><%= message.text %></div>

@@ -71,9 +71,27 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
 
     def get_student_context(self, user=None):
         # TODO: Parents should declare what they provide for student context
+
+        # Получение пользовательского контектса и отрендеренного фрагмента
+        # очень очевидно, так как собирается в обратном порядке. По хорошему,
+        # нужно переписать это под ноль.
+        # С связи с этим нельзя перезаписать текст задания (он устанавливается
+        # контекстом выше). Именно для этого мы заводим отдельный параметр в
+        # в контексте здесь.
+        if self.need_generate:
+            text = ''
+            try:
+                if self.pregenerated:
+                    text = self.description % tuple(self.pregenerated.split("\n"))
+            except TypeError:
+                pass
+        else:
+            text = self.description
+
         context = {
             'allow_submissions': True if self.due is None or now() > self.due else False,
             'task_status': self.queue_state or 'IDLE',
+            'task_with_pregenerated': text,
         }
         if self.message is not None:
             context.update({
@@ -352,11 +370,9 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         body = json.loads(pregenerated.body)
         if body['success']:
             self.pregenerated = body['content']
-            self.need_generate = False
             self.message = None
         else:
             self.pregenerated = None
-            self.need_generate = True
             self.message = "При генерации задания произошла ошибка."
 
-        self.task_state = 'IDLE'
+        self.queue_state = 'IDLE'
