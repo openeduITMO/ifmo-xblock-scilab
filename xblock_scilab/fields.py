@@ -1,4 +1,4 @@
-from xblock.fields import Scope, Integer, String, Float
+from xblock.fields import Scope, Integer, String, Float, Boolean
 from xblock_ifmo.xblock_ifmo_fields import IfmoXBlockFields
 
 
@@ -21,4 +21,16 @@ class ScilabXBlockFields(IfmoXBlockFields):
     message = String(
         scope=Scope.user_state,
         default=None,
+    )
+
+    need_generate = Boolean(
+        default=False,
+        scope=Scope.settings,
+        display_name="",
+        help=""
+    )
+
+    pregenerated = String(
+        default=None,
+        scope=Scope.user_state,
     )

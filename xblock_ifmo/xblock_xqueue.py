@@ -8,6 +8,11 @@ from .xblock_ajax import AjaxHandlerMixin
 from .utils import reify
 
 
+QUEUE_STATES = ('IDLE', 'QUEUED', 'GENERATING', 'ERROR', 'UNKNOWN')
+IDLE_STATES = ('IDLE', 'ERROR')
+WORKING_STATES = ('QUEUED', 'GENERATING')
+
+
 class XBlockXQueueMixin(AjaxHandlerMixin, XBlock):
 
     queue_name = String(

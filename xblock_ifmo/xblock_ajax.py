@@ -1,7 +1,7 @@
 # -*- coding=utf-8 -*-
 
 
-from xqueue_api.xsubmission import XSubmissionResult
+from xqueue_api.xobject import XObjectResult
 
 
 class AjaxHandlerMixin(object):
@@ -21,10 +21,20 @@ class AjaxHandlerMixin(object):
         return func
 
     @staticmethod
-    def xqueue_callback(func):
-        assert hasattr(func, '__call__') and hasattr(func, 'func_name')
-        func._is_xqueue_callback = True
-        return func
+    def xqueue_callback(target_class_or_func):
+
+        def wrapped(func):
+            assert hasattr(func, '__call__') and hasattr(func, 'func_name')
+            setattr(func, '_is_xqueue_callback', True)
+            setattr(func, '_xqueue_result_class', target_class)
+            return func
+
+        if not isinstance(target_class_or_func, type):
+            target_class = XObjectResult
+            return wrapped(target_class_or_func)
+        else:
+            target_class = target_class_or_func
+            return wrapped
 
     def handle_ajax(self, dispatch, data):
 
@@ -33,7 +43,7 @@ class AjaxHandlerMixin(object):
             method(data)
 
         elif getattr(method, '_is_xqueue_callback', False):
-            submission_result = XSubmissionResult(data)
+            submission_result = getattr(method, '_xqueue_result_class', XObjectResult)(data)
             method(submission_result)
 
         else:

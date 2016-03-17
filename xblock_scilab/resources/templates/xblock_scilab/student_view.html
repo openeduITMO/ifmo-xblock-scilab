@@ -10,6 +10,12 @@
             </div>
         <% } %>
 
+        <% if (task_status == 'GENERATING') { %>
+            <div class="ifmo-xblock-message ifmo-xblock-message-info %>">
+                Your assessment is now being generated. Please wait for a while.
+            </div>
+        <% } %>
+
         <div class="task"><%= meta.text %></div>
 
         <% if (typeof message != 'undefined') { %>

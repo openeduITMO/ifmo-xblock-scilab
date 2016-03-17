@@ -8,17 +8,18 @@ from xblock.core import XBlock
 from xblock.fragment import Fragment
 from xblock_ifmo.utils import now
 from xblock_ifmo.xblock_ifmo import IfmoXBlock
-from xblock_ifmo.xblock_xqueue import XBlockXQueueMixin
+from xblock_ifmo.xblock_xqueue import XBlockXQueueMixin, WORKING_STATES
 from xblock_ifmo.xblock_ajax import AjaxHandlerMixin
 from xblock_scilab.models import ScilabSubmission
 from xblock_scilab.utils import get_sha1, file_storage_path
 from submissions import api as submissions_api
 from base64 import b64encode
-
+from zipfile import ZipFile
 
 from .fields import ScilabXBlockFields
-
-
+from xqueue_api.utils import deep_update
+from xqueue_api.xsubmission import XSubmissionResult
+from xqueue_api.xobject import XObjectResult
 
 import json
 import mimetypes
@@ -32,6 +33,12 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
     # always_recalculate_grades = True
 
     def student_view(self, context):
+
+        if not self._is_studio() \
+                and self.need_generate \
+                and self.queue_state not in WORKING_STATES \
+                and not self.pregenerated:
+            self.do_generate()
 
         if context is None:
             context = dict()
@@ -146,7 +153,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
 
             # Реальные названия файлов в ФС
             real_path = file_storage_path(self.location, uploaded_sha1, uploaded_filename)
-            instructor_real_path = file_storage_path(self.location, 'instructor_checker', 'instructor_checker.zip')
+            instructor_real_path = self.get_instructor_path()
 
             # Сохраняем данные о решении
             student_id = self.student_submission_id()
@@ -168,6 +175,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             self.queue_state = 'QUEUED'
 
             payload = {
+                'method': 'check',
                 'student_info': self.queue_student_info,
                 'grader_payload': '',
                 'student_response': self.get_queue_student_response(submission),
@@ -176,7 +184,6 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             self.send_to_queue(
                 header=self.get_submission_header(
                     access_key_prefix=submission.get('uuid'),
-                    extra={'method': 'check'}
                 ),
                 body=json.dumps(payload)
             )
@@ -210,6 +217,9 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
     def upload_instructor_checker(self, request, suffix):
 
         upload = request.params['instructor_checker']
+
+        self.validate_instructor_archive(upload.file)
+
         uploaded_file = File(upload.file)
 
         real_path = file_storage_path(
@@ -257,26 +267,37 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             with default_storage.open(filename, 'r') as f:
                 return b64encode(f.read())
 
-        # user_id = request.params['anonymous_user_id']
-        user_id = suffix
-        user_id = self.student_submission_id(submission_id=user_id)
-        submission = submissions_api.get_submission(user_id.get('student_id'))
-        answer = submission['answer']
-        return Response(json_body={
-            'user_archive_name': answer.get('real_path'),
-            'user_archive': get_64_contents(answer.get('real_path')),
-            'instructor_archive_name': answer.get('instructor_real_path'),
-            'instructor_archive': get_64_contents(answer.get('instructor_real_path')),
-        })
+        instructor_real_path = self.get_instructor_path()
 
-    def get_queue_student_response(self, submission):
+        response = {
+            'instructor_archive_name': instructor_real_path,
+            'instructor_archive': get_64_contents(instructor_real_path),
+        }
+
+        if suffix:
+            user_id = self.student_submission_id(submission_id=suffix)
+            submission = submissions_api.get_submission(user_id.get('student_id'))
+            answer = submission['answer']
+            response.update({
+                'user_archive_name': answer.get('real_path'),
+                'user_archive': get_64_contents(answer.get('real_path')),
+            })
+
+        return Response(json_body=response)
+
+    def get_queue_student_response(self, submission=None, dump=True):
         # TODO: Protect this with hash
         base_url = self.runtime.handler_url(self, 'get_submitted_archives', thirdparty=True)
-        return json.dumps({
-            'archive_64_url': base_url + '/' + submission.get('uuid'),
-        })
+        if submission is None:
+            submission = {}
+        result = {
+            'archive_64_url': base_url + '/' + submission.get('uuid', ''),
+        }
+        if dump:
+            result = json.dumps(result)
+        return result
 
-    @AjaxHandlerMixin.xqueue_callback
+    @AjaxHandlerMixin.xqueue_callback(XSubmissionResult)
     def score_update(self, submission_result):
 
         parent = super(ScilabXBlock, self)
@@ -296,3 +317,46 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
                 'value': submission_result.score * self.max_score(),
                 'max_value': self.max_score()
         })
+
+    def validate_instructor_archive(self, uploaded_file):
+
+        instructor_file = ZipFile(uploaded_file)
+        file_list = instructor_file.namelist()
+
+        self.need_generate = "generate.sce" in file_list
+        assert "check.sce" in file_list, "No check.sce in instructor archive."
+
+    def do_generate(self):
+
+        self.queue_state = 'GENERATING'
+        self.pregenerated = None
+
+        header = self.get_submission_header(dispatch='set_pregenerated')
+        body = self.get_queue_student_response(dump=False)
+        deep_update(body, {
+            'method': 'generate',
+        })
+
+        self.send_to_queue(header=header, body=json.dumps(body))
+
+    def get_instructor_path(self):
+        return file_storage_path(self.location, 'instructor_checker', 'instructor_checker.zip')
+
+    @AjaxHandlerMixin.xqueue_callback
+    def set_pregenerated(self, pregenerated):
+
+        parent = super(ScilabXBlock, self)
+        if hasattr(parent, 'set_pregenerated'):
+            parent.set_pregenerated(pregenerated)
+
+        body = json.loads(pregenerated.body)
+        if body['success']:
+            self.pregenerated = body['content']
+            self.need_generate = False
+            self.message = None
+        else:
+            self.pregenerated = None
+            self.need_generate = True
+            self.message = "При генерации задания произошла ошибка."
+
+        self.task_state = 'IDLE'
