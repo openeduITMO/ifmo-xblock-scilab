@@ -1,19 +1,19 @@
 # -*- coding=utf-8 -*-
 
+import json
+import logging
+
 from courseware.models import StudentModule
 from django.contrib.auth.models import User
 from django.db import transaction
 from xblock.core import XBlock
 from xblock.fragment import Fragment
+from webob.response import Response
 
-import json
-import logging
 from .utils import require
-
 from .xblock_ifmo_fields import IfmoXBlockFields
 from .xblock_ifmo_resources import IfmoXBlockResources
 
-from webob.response import Response
 
 logger = logging.getLogger(__name__)
 

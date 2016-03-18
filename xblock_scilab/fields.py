@@ -1,4 +1,4 @@
-from xblock.fields import Scope, Integer, String, Float, Boolean
+from xblock.fields import Scope, String, Boolean
 from xblock_ifmo.xblock_ifmo_fields import IfmoXBlockFields
 
 

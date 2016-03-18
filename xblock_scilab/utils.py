@@ -1,7 +1,7 @@
-from functools import partial
-
 import hashlib
 import os
+
+from functools import partial
 
 
 def get_sha1(file_handler):

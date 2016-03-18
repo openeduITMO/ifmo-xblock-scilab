@@ -1,16 +1,14 @@
 # -*- coding=utf-8 -*-
 
-from xblock.core import XBlock
-from xqueue_api.utils import now, make_hashkey, create_student_info
-from xblock.fields import Scope, String, Dict
 import json
-from .xblock_ajax import AjaxHandlerMixin
-from .utils import reify
+
+from xblock.core import XBlock
+from xblock.fields import Scope, String, Dict
+from xqueue_api.utils import now, make_hashkey, create_student_info
 from xqueue_api.xobject import XObjectResult
 
-QUEUE_STATES = ('IDLE', 'QUEUED', 'GENERATING', 'ERROR', 'UNKNOWN')
-IDLE_STATES = ('IDLE', 'ERROR')
-WORKING_STATES = ('QUEUED', 'GENERATING')
+from .xblock_ajax import AjaxHandlerMixin
+from .utils import reify
 
 
 def xqueue_callback(target_class_or_func):
@@ -102,9 +100,5 @@ class XBlockXQueueMixin(AjaxHandlerMixin, XBlock):
         parent = super(XBlockXQueueMixin, self)
         if hasattr(parent, 'score_update'):
             parent.score_update(submission_result)
-
-        # self.queue_details = {
-        #     'state': 'IDLE'
-        # }
 
 

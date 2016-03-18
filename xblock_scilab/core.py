@@ -1,24 +1,25 @@
 # -*- coding: utf-8 -*-
 
+from base64 import b64encode
+from zipfile import ZipFile
+
+import json
+import mimetypes
+
 from django.core.files.base import File
 from django.core.files.storage import default_storage
-from webob.response import Response
+from submissions import api as submissions_api
 from xblock.core import XBlock
 from xblock.fragment import Fragment
 from xblock_ifmo.xblock_ifmo import IfmoXBlock
 from xblock_ifmo.xblock_xqueue import XBlockXQueueMixin, xqueue_callback
 from xblock_ifmo.utils import now
-from xblock_scilab.utils import get_sha1, file_storage_path
-from submissions import api as submissions_api
-from base64 import b64encode
-from zipfile import ZipFile
-
-from .fields import ScilabXBlockFields
 from xqueue_api.utils import deep_update
 from xqueue_api.xsubmission import XSubmissionResult
+from webob.response import Response
 
-import json
-import mimetypes
+from .fields import ScilabXBlockFields
+from .utils import get_sha1, file_storage_path
 
 
 class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):

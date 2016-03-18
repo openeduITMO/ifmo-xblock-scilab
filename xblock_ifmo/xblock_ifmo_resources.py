@@ -1,6 +1,6 @@
-from django.template import Context, Template
-
 import pkg_resources
+
+from django.template import Context, Template
 
 
 class IfmoXBlockResources(object):

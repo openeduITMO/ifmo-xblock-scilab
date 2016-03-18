@@ -1,6 +1,5 @@
 # -*- coding=utf-8 -*-
 
-
 from xqueue_api.xobject import XObjectResult
 
 
