@@ -195,7 +195,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             payload = {
                 'method': 'check',
                 'student_info': self.queue_student_info,
-                'grader_payload': '',
+                'grader_payload': self.pregenerated if self.need_generate else None,
                 'student_response': self.get_queue_student_response(submission),
             }
 
