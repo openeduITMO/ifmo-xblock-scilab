@@ -2,15 +2,12 @@
 
 from django.core.files.base import File
 from django.core.files.storage import default_storage
-from ifmo_celery_grader.models import GraderTask
 from webob.response import Response
 from xblock.core import XBlock
 from xblock.fragment import Fragment
-from xblock_ifmo.utils import now
 from xblock_ifmo.xblock_ifmo import IfmoXBlock
-from xblock_ifmo.xblock_xqueue import XBlockXQueueMixin, WORKING_STATES
-from xblock_ifmo.xblock_ajax import AjaxHandlerMixin
-from xblock_scilab.models import ScilabSubmission
+from xblock_ifmo.xblock_xqueue import XBlockXQueueMixin, xqueue_callback
+from xblock_ifmo.utils import now
 from xblock_scilab.utils import get_sha1, file_storage_path
 from submissions import api as submissions_api
 from base64 import b64encode
@@ -19,7 +16,6 @@ from zipfile import ZipFile
 from .fields import ScilabXBlockFields
 from xqueue_api.utils import deep_update
 from xqueue_api.xsubmission import XSubmissionResult
-from xqueue_api.xobject import XObjectResult
 
 import json
 import mimetypes
@@ -34,10 +30,8 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
 
     def student_view(self, context):
 
-        if not self._is_studio() \
-                and self.need_generate \
-                and self.queue_state not in WORKING_STATES \
-                and not self.pregenerated:
+        if not self._is_studio() and self.need_generate \
+                and not self.queue_details and not self.pregenerated:
             self.do_generate()
 
         if context is None:
@@ -90,7 +84,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
 
         context = {
             'allow_submissions': True if self.due is None or now() > self.due else False,
-            'task_status': self.queue_state or 'IDLE',
+            'task_status': self.queue_details.get('state', 'IDLE'),
             'task_with_pregenerated': text,
         }
         if self.message is not None:
@@ -153,7 +147,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             response.update(response_update)
             return self.get_response_user_state(response)
 
-        if self.queue_state not in ScilabSubmission.IDLE_STATUSES:
+        if self.queue_details:
             return _return_response({
                 'message': {
                     'text': 'Проверка другого решения уже запущена.',
@@ -188,9 +182,6 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             if default_storage.exists(real_path):
                 default_storage.delete(real_path)
             default_storage.save(real_path, uploaded_file)
-
-            # Отправляем решение в очередь
-            self.queue_state = 'QUEUED'
 
             payload = {
                 'method': 'check',
@@ -315,7 +306,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             result = json.dumps(result)
         return result
 
-    @AjaxHandlerMixin.xqueue_callback(XSubmissionResult)
+    @xqueue_callback(XSubmissionResult)
     def score_update(self, submission_result):
 
         parent = super(ScilabXBlock, self)
@@ -330,7 +321,6 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         submissions_api.set_score(submission_uid, int(100*submission_result.score), 100)
 
         self.points = submission_result.score
-        self.queue_state = 'IDLE'
         self.runtime.publish(self, 'grade', {
                 'value': submission_result.score * self.max_score(),
                 'max_value': self.max_score()
@@ -346,7 +336,6 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
 
     def do_generate(self):
 
-        self.queue_state = 'GENERATING'
         self.pregenerated = None
 
         header = self.get_submission_header(dispatch='set_pregenerated')
@@ -355,12 +344,12 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             'method': 'generate',
         })
 
-        self.send_to_queue(header=header, body=json.dumps(body))
+        self.send_to_queue(header=header, body=json.dumps(body), state='GENERATING')
 
     def get_instructor_path(self):
         return file_storage_path(self.location, 'instructor_checker', 'instructor_checker.zip')
 
-    @AjaxHandlerMixin.xqueue_callback
+    @xqueue_callback
     def set_pregenerated(self, pregenerated):
 
         parent = super(ScilabXBlock, self)
@@ -375,4 +364,3 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             self.pregenerated = None
             self.message = "При генерации задания произошла ошибка."
 
-        self.queue_state = 'IDLE'

@@ -6,11 +6,33 @@ from xblock.fields import Scope, String, Dict
 import json
 from .xblock_ajax import AjaxHandlerMixin
 from .utils import reify
-
+from xqueue_api.xobject import XObjectResult
 
 QUEUE_STATES = ('IDLE', 'QUEUED', 'GENERATING', 'ERROR', 'UNKNOWN')
 IDLE_STATES = ('IDLE', 'ERROR')
 WORKING_STATES = ('QUEUED', 'GENERATING')
+
+
+def xqueue_callback(target_class_or_func):
+
+    def wrapped(func):
+        assert hasattr(func, '__call__') and hasattr(func, 'func_name')
+
+        def inner(self, *args, **kwargs):
+            self.queue_details = {}
+            func(self, *args, **kwargs)
+
+        setattr(inner, '_is_xqueue_callback', True)
+        setattr(inner, '_xqueue_result_class', target_class)
+
+        return inner
+
+    if not isinstance(target_class_or_func, type):
+        target_class = XObjectResult
+        return wrapped(target_class_or_func)
+    else:
+        target_class = target_class_or_func
+        return wrapped
 
 
 class XBlockXQueueMixin(AjaxHandlerMixin, XBlock):
@@ -19,11 +41,6 @@ class XBlockXQueueMixin(AjaxHandlerMixin, XBlock):
         scope=Scope.settings,
         default="",
         help="Queue name."
-    )
-
-    queue_state = String(
-        scope=Scope.user_state,
-        default="IDLE",
     )
 
     queue_details = Dict(
@@ -71,18 +88,23 @@ class XBlockXQueueMixin(AjaxHandlerMixin, XBlock):
             result.update(extra)
         return json.dumps(result)
 
-    def send_to_queue(self, header=None, body=None):
+    def send_to_queue(self, header=None, body=None, state='QUEUED'):
         self.queue_details = {
+            'state': state,
             'key': self.queue_key,
             'time': self.queue_time
         }
         self.queue_interface.send_to_queue(header=header, body=body)
 
-    @AjaxHandlerMixin.xqueue_callback
+    @xqueue_callback
     def score_update(self, submission_result):
 
         parent = super(XBlockXQueueMixin, self)
         if hasattr(parent, 'score_update'):
             parent.score_update(submission_result)
+
+        # self.queue_details = {
+        #     'state': 'IDLE'
+        # }
 
 
