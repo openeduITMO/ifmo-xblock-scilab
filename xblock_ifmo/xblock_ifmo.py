@@ -72,7 +72,7 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
         # Отображается только в том случае, если за работу начисляются баллы
         if self.weight is not None and self.weight != 0:
             # if self.attempts > 0:
-                result = '(%s/%s points)' % (self.points * self.weight, self.weight,)
+                result = '(%s/%s баллов)' % (self.points * self.weight, self.weight,)
             # else:
             #     result = '(%s points possible)' % (self.weight,)
         return result

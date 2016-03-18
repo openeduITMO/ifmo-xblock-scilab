@@ -6,13 +6,13 @@
 
         <% if (task_status == 'QUEUED') { %>
             <div class="ifmo-xblock-message ifmo-xblock-message-info %>">
-                Your submission is queued for grading.
+                Ваше решение поставлено в очередь на проверку.
             </div>
         <% } %>
 
         <% if (task_status == 'GENERATING') { %>
             <div class="ifmo-xblock-message ifmo-xblock-message-info %>">
-                Your assessment is now being generated. Please wait for a while.
+                Пожалуйста, подождите, пока генерируется ваш персональный вариант задания.
             </div>
         <% } %>
 
@@ -38,7 +38,7 @@
 
         <% } else { %>
             <div class="ifmo-xblock-message ifmo-xblock-message-info">
-                Submissions are no longer accepted.
+                Решения больше не принимаются.
             </div>
         <% } %>
 
@@ -48,14 +48,14 @@
 
     <script type="text/template" class="scilab-template-upload-input">
         <div class="button upload_input">
-            <span>Choose file</span>
+            <span>Выберите файл</span>
             <input class="file_upload" type="file" name="submission"/>
         </div>
     </script>
 
     <script type="text/template" class="scilab-template-upload-selected">
-        <button class="button upload_another">Select another file</button>
-        <button class="button button-highlighted upload_do" data-in-progress="Uploading... ">Upload <%= filename %></button>
+        <button class="button upload_another">Выбрать другой файл</button>
+        <button class="button button-highlighted upload_do" data-in-progress="Идёт отправка...">Отправить <%= filename %></button>
     </script>
 
     <div class="ifmo-xblock-content problem">

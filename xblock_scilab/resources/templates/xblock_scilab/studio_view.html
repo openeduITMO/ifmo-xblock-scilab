@@ -7,47 +7,47 @@
 
                 <li class="field comp-setting-entry">
                     <div class="wrapper-comp-setting">
-                        <label for="input_{{id}}_display_name" class="label setting-label">Display name</label>
+                        <label for="input_{{id}}_display_name" class="label setting-label">Отображаемое имя</label>
                         <input id="input_{{id}}_display_name" class="input setting-input" type="text" name="display_name" value="<%= display_name %>" />
                     </div>
                 </li>
 
                 <li class="field comp-setting-entry">
                     <div class="wrapper-comp-setting">
-                        <label for="input_{{id}}_queue_name" class="label setting-label">Queue name</label>
+                        <label for="input_{{id}}_queue_name" class="label setting-label">Имя очереди</label>
                         <input id="input_{{id}}_queue_name" class="input setting-input" type="text" name="queue_name" value="<%= queue_name %>" />
                     </div>
                 </li>
 
                 <li class="field comp-setting-entry">
                     <div class="wrapper-comp-setting">
-                        <label for="input_{{id}}_weight" class="label setting-label">Weight</label>
+                        <label for="input_{{id}}_weight" class="label setting-label">Вес</label>
                         <input id="input_{{id}}_weight" class="input setting-input" type="text" name="weight" value="<%= weight %>" />
                     </div>
                 </li>
 
                 <li class="field comp-setting-entry">
                     <div class="wrapper-comp-setting">
-                        <label for="input_{{id}}_attempts" class="label setting-label">Attempts</label>
+                        <label for="input_{{id}}_attempts" class="label setting-label">Количество попыток</label>
                         <input id="input_{{id}}_attempts" class="input setting-input" type="text" name="attempts" value="<%= attempts %>" />
                     </div>
                 </li>
 
                 <li class="field comp-setting-entry">
                     <div class="wrapper-comp-setting">
-                        <label for="input_{{id}}_instructor_checker" class="label setting-label">Instructor checker archive</label>
+                        <label for="input_{{id}}_instructor_checker" class="label setting-label">Архив инструктора</label>
                         <div class="ifmo-xblock-scilab-studio-checker-container">
                                 <input id="input_{{id}}_instructor_checker" class="setting-input ifmo-xblock-scilab-studio-checker-file" type="file" name="instructor_checker"/>
-                                <div class="ifmo-xblock-scilab-studio-checker-selected">No checker selected</div>
+                                <div class="ifmo-xblock-scilab-studio-checker-selected">Архив не выбран</div>
                         </div>
-                        <input type="button" class="upload_instructor_checker ifmo-xblock-scilab-studio-checker-upload" value="Upload">
+                        <input type="button" class="upload_instructor_checker ifmo-xblock-scilab-studio-checker-upload" value="Отправить">
                     </div>
                     <span class="tip setting-help">Архив инструктора должен содержать файл <b>checker.sce</b>. Этот сценарий должен создать файл <b>checker_output</b>, содержащий вещественное число от 0 до 1.</span>
                 </li>
 
                 <li class="field comp-setting-entry">
                     <div class="wrapper-comp-setting">
-                        <label for="input_{{id}}_description" class="label setting-label">Description</label>
+                        <label for="input_{{id}}_description" class="label setting-label">Текст задания</label>
                         <textarea id="input_{{id}}_description" class="input text setting-input" name="description"><%= description %></textarea>
                     </div>
                 </li>
