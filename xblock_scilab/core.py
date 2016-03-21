@@ -11,6 +11,7 @@ from django.core.files.storage import default_storage
 from submissions import api as submissions_api
 from xblock.core import XBlock
 from xblock.fragment import Fragment
+from xblock_ifmo.fragment import FragmentMakoChain
 from xblock_ifmo.xblock_ifmo import IfmoXBlock
 from xblock_ifmo.xblock_xqueue import XBlockXQueueMixin, xqueue_callback
 from xblock_ifmo.utils import now
@@ -29,7 +30,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
     # Use this unless submissions api is used
     # always_recalculate_grades = True
 
-    def student_view(self, context):
+    def student_view(self, context=None):
 
         if not self._is_studio() and self.need_generate \
                 and not self.queue_details and not self.pregenerated:
@@ -38,15 +39,21 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         if context is None:
             context = dict()
 
-        student_context = self.get_student_context()
+        context.update(self.get_student_context())
 
-        fragment = Fragment()
-        fragment.add_content(self.load_template('xblock_scilab/student_view.html', student_context))
+        parent = super(ScilabXBlock, self)
+        if hasattr(parent, 'student_view'):
+            fragment = FragmentMakoChain(base=parent.student_view())
+        else:
+            fragment = Fragment()
+
+        fragment.content = self.load_template('xblock_scilab/student_view.mako')
         fragment.add_css(self.load_css('student_view.css'))
         fragment.add_javascript(self.load_js('student_view.js'))
         fragment.initialize_js('ScilabXBlockStudentView')
+        fragment.context = context
 
-        return super(ScilabXBlock, self).student_view_base(fragment, context, student_context)
+        return fragment
 
     def studio_view(self, context):
 
@@ -65,6 +72,13 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
     #==================================================================================================================#
 
     def get_student_context(self, user=None):
+
+        parent = super(ScilabXBlock, self)
+        if hasattr(parent, 'get_student_context'):
+            context = parent.get_student_context(user)
+        else:
+            context = {}
+
         # TODO: Parents should declare what they provide for student context
 
         # Получение пользовательского контектса и отрендеренного фрагмента
@@ -83,11 +97,11 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         else:
             text = self.description
 
-        context = {
+        context.update({
             'allow_submissions': True if self.due is None or now() > self.due else False,
             'task_status': self.queue_details.get('state', 'IDLE'),
             'task_with_pregenerated': text,
-        }
+        })
         if self.message is not None:
             context.update({
                 'message': {

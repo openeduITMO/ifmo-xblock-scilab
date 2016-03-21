@@ -1,3 +1,5 @@
+from mako.lookup import TemplateLookup, Template as MakoTemplate
+from mako.template import Template
 import pkg_resources
 
 from django.template import Context, Template
@@ -19,13 +21,15 @@ class IfmoXBlockResources(object):
         template = Template(template_str)
         return template.render(Context(context))
 
-    def load_resource(self, resource_path, package_name=None):
+    def load_resource(self, resource_path, package_name=None, utf8=True):
         """
         Gets the content of a resource
         """
         if package_name is None:
             package_name = self.package
         resource_content = pkg_resources.resource_string(package_name, resource_path)
+        if utf8:
+            resource_content = resource_content.decode('utf-8')
         return resource_content
         # return unicode(resource_content)
 
@@ -41,9 +45,25 @@ class IfmoXBlockResources(object):
         js_name = 'resources/javascript/%s' % js_name
         return self.load_resource(js_name, package)
 
-    def load_template(self, template_name, context=None, package=None):
+    def load_template(self, template_name, context=None, package=None, render=False, utf8=True):
         template_name = 'resources/templates/%s' % template_name
-        return self.render_template(template_name, context, package)
+        if render:
+            return self.render_template(template_name, context, package)
+        else:
+            return self.load_resource(template_name, package_name=package, utf8=utf8)
+
+    def load_mako_template(self, template_name, package=None, base=None, context=None):
+
+        if context is None:
+            context = {}
+
+        lookup = TemplateLookup()
+        if base is not None:
+            lookup.put_string("ifmo_xblock_super", base.body_html())
+
+        template_str = self.load_resource('resources/templates/%s' % template_name, package_name=package, utf8=True)
+        template = MakoTemplate(text=template_str, lookup=lookup)
+        return template.render(**context)
 
     def load_css(self, css_name, package=None):
         css_name = 'resources/styles/%s' % css_name

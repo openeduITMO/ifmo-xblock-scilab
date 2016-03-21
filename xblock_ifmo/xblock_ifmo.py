@@ -111,6 +111,22 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
         context.update(self.get_student_context())
         return context
 
+    def student_view(self, context=None):
+
+        if context is None:
+            context = {}
+
+        context.update(self.get_student_context())  # deep update?
+
+        fragment = Fragment()
+        fragment.add_content(self.load_template(
+            'student_view.mako',
+            context=context,
+            package='xblock_ifmo'
+        ))
+
+        return fragment
+
     def student_view_base(self, fragment, context=None, student_context=None):
         """
         Изменяем фрагмент xblock'а. Оборачиваем весь шаблон в дополнительный.
@@ -147,7 +163,7 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
         return result
 
     def get_student_context(self, user=None):
-        return dict()
+        return self.get_student_context_base(user)
 
     def get_student_context_base(self, user=None):
         return {
