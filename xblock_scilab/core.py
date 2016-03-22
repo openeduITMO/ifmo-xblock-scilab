@@ -50,6 +50,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         fragment.content = self.load_template('xblock_scilab/student_view.mako')
         fragment.add_css(self.load_css('student_view.css'))
         fragment.add_javascript(self.load_js('student_view.js'))
+        fragment.add_javascript(self.load_js('submission-modal.js'))
         fragment.initialize_js('ScilabXBlockStudentView')
         fragment.context = context
 

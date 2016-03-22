@@ -119,11 +119,8 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
         context.update(self.get_student_context())  # deep update?
 
         fragment = Fragment()
-        fragment.add_content(self.load_template(
-            'student_view.mako',
-            context=context,
-            package='xblock_ifmo'
-        ))
+        fragment.add_content(self.load_template('student_view.mako', context=context, package='xblock_ifmo'))
+        fragment.add_javascript(self.load_js('init-modals.js', package='xblock_ifmo'))
 
         return fragment
 

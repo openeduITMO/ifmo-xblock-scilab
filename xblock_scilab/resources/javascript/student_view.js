@@ -117,7 +117,6 @@ function ScilabXBlockStudentView(runtime, element)
             //disable_controllers(element);
         }
 
-        console.log(data.task_status);
         if (data.task_status != 'IDLE') {
             setTimeout(function(){
                 $.post(urls.get_user_data, '{}', function(data) {
@@ -163,6 +162,7 @@ function ScilabXBlockStudentView(runtime, element)
         } else {
             require(["jquery", "underscore", "jquery.fileupload"], init_xblock);
         }
+        init_modals(runtime, element, $, _);
     });
 
 }

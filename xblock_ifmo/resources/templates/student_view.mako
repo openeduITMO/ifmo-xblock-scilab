@@ -12,6 +12,7 @@
             <div class="wrap-instructor-info">
                 <a class="instructor-info-action" href="#${meta['id']}-tools-modal" id="${meta['id']}-tools-button">Инструменты инструктора</a>
                 <a class="instructor-info-action" href="#${meta['id']}-debug-modal" id="${meta['id']}-debug-button">Отладочная информация</a>
+                <%block name="instructor_actions"/>
             </div>
 
             <section aria-hidden="true" class="modal staff-modal" id="${meta['id']}-debug-modal" style="width: 800px">
