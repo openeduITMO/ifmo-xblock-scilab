@@ -1,5 +1,3 @@
-from mako.lookup import TemplateLookup, Template as MakoTemplate
-from mako.template import Template
 import pkg_resources
 
 from django.template import Context, Template
@@ -33,14 +31,6 @@ class IfmoXBlockResources(object):
         return resource_content
         # return unicode(resource_content)
 
-    def resource_string(self, path, package_name=None):
-        """Handy helper for getting resources from our kit."""
-        if package_name is None:
-            package_name = self.package
-        data = pkg_resources.resource_string(package_name, path)
-        return data
-        # return data.decode("utf8")
-
     def load_js(self, js_name, package=None):
         js_name = 'resources/javascript/%s' % js_name
         return self.load_resource(js_name, package)
@@ -52,18 +42,8 @@ class IfmoXBlockResources(object):
         else:
             return self.load_resource(template_name, package_name=package, utf8=utf8)
 
-    def load_mako_template(self, template_name, package=None, base=None, context=None):
-
-        if context is None:
-            context = {}
-
-        lookup = TemplateLookup()
-        if base is not None:
-            lookup.put_string("ifmo_xblock_super", base.body_html())
-
-        template_str = self.load_resource('resources/templates/%s' % template_name, package_name=package, utf8=True)
-        template = MakoTemplate(text=template_str, lookup=lookup)
-        return template.render(**context)
+    def get_template_dirs(self, package=None):
+        raise NotImplementedError()
 
     def load_css(self, css_name, package=None):
         css_name = 'resources/styles/%s' % css_name

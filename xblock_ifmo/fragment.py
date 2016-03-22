@@ -9,11 +9,13 @@ class FragmentMakoChain(Fragment):
     template = None
     context = {}
     _content = None
+    lookup_dirs = None
 
-    def __init__(self, content=None, base=None):
+    def __init__(self, content=None, base=None, lookup_dirs=None):
         assert base, FragmentMakoChain
         super(FragmentMakoChain, self).__init__(content=content)
         self.base = base
+        self.lookup_dirs = lookup_dirs
 
     def body_html(self):
 
@@ -29,7 +31,7 @@ class FragmentMakoChain(Fragment):
 
         if self.base is not None:
 
-            lookup = TemplateLookup()
+            lookup = TemplateLookup(directories=self.lookup_dirs)
 
             if hasattr(self.base, 'build_chain'):
                 self.base.build_chain()

@@ -2,7 +2,7 @@ function SubmissionModal(runtime, element)
 {
     var handlers = {
       get_submission_info: function(e) {
-          console.log("staff-get-submission-info-btn clicked");
+
       }
     };
 

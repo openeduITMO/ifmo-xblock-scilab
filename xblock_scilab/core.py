@@ -8,6 +8,7 @@ import mimetypes
 
 from django.core.files.base import File
 from django.core.files.storage import default_storage
+from path import path
 from submissions import api as submissions_api
 from xblock.core import XBlock
 from xblock.fragment import Fragment
@@ -30,6 +31,11 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
     # Use this unless submissions api is used
     # always_recalculate_grades = True
 
+    # Пока не очень понятно, как избежать этой штуки.
+    template_dirs = [
+        path(__file__).dirname().abspath() / "resources" / "templates" / "xblock_scilab"
+    ]
+
     def student_view(self, context=None):
 
         if not self._is_studio() and self.need_generate \
@@ -43,7 +49,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
 
         parent = super(ScilabXBlock, self)
         if hasattr(parent, 'student_view'):
-            fragment = FragmentMakoChain(base=parent.student_view())
+            fragment = FragmentMakoChain(base=parent.student_view(), lookup_dirs=self.template_dirs)
         else:
             fragment = Fragment()
 
