@@ -167,7 +167,9 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
     @XBlock.handler
     def upload_submission(self, request, suffix):
 
-        def _return_response(response_update):
+        def _return_response(response_update=None):
+            if response_update is None:
+                response_update = {}
             response = self.get_student_context()
             response.update(response_update)
             return self.get_response_user_state(response)
@@ -240,12 +242,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
                 }
             })
 
-        return _return_response({
-            'message': {
-                'text': 'Решение поставлено в очередь на проверку.',
-                'type': 'info',
-            }
-        })
+        return _return_response()
 
     @XBlock.handler
     def upload_instructor_checker(self, request, suffix):
