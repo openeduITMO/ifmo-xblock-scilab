@@ -6,7 +6,7 @@
             <div>&nbsp;</div>
             <div>
                 <label for="${meta['id']}-submission-id-input">Имя пользователя / идентификатор решения: </label>
-                <input type="text" id="${meta['id']}-submission-id-input" name="submission-id">
+                <input type="text" id="${meta['id']}-submission-id-input" name="submission_id">
                 <input type="button" value="Показать" class="button staff-get-submission-info-btn" id="${meta['id']}-staff-get-submission-info-button"/>
             </div>
             <hr/>

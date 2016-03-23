@@ -7,16 +7,16 @@
  * @TODO: init_modals должны перезавать инициализирующим функциям $ и _
  *
  * @param runtime XBlock runtime
- * @param element Элемент модельного окна
+ * @param xblock Инстанс xblock'а
  * @param $ jQuery object
  * @param _ underscore object
  */
-function init_modals(runtime, element, $, _)
+function init_modals(runtime, xblock, $, _)
 {
-    $(element).find('.init-required').each(function(i, e) {
+    $(xblock).find('.init-required').each(function(i, e) {
         var init_fn = $(e).data('init-fn');
         if(typeof window[init_fn] == "function") {
-            window[init_fn](runtime, e);
+            window[init_fn](runtime, xblock, e);
         } else {
             console.warn("init_fn is not a function: ", init_fn);
         }

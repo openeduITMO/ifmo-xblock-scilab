@@ -24,6 +24,7 @@ from .fields import ScilabXBlockFields
 from .utils import get_sha1, file_storage_path
 
 
+@XBlock.needs("user")
 class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
 
     package = __package__
@@ -386,3 +387,35 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             self.pregenerated = None
             self.message = "При генерации задания произошла ошибка."
 
+    @XBlock.json_handler
+    def get_submissions_data(self, data, suffix=''):
+
+        def result(message, success=True):
+            return {
+                "success": False,
+                "message": message,
+            }
+
+        submission_param = data.get('submission_id').split('+')
+        submission_id = None
+        username = submission_param[0]
+        if len(submission_param) > 1:
+            submission_id = submission_param[0]
+
+        if submission_id is None:
+            anon_id = self.runtime.service(self, 'user').get_anonymous_user_id(username, str(self.course_id))
+            if anon_id is None:
+                return result("User %s not found." % username, success=False)
+
+            submissions = submissions_api.get_submissions(self.student_submission_id(submission_id=anon_id))
+            time_format = '%d.%m.%Y %H:%M:%S UTC'
+
+            result_submissions = [{
+                'student_item': x['student_item'],
+                'attempt_number': x['attempt_number'],
+                'submitted_at': x['submitted_at'].strftime(time_format),
+                'created_at': x['created_at'].strftime(time_format),
+                'answer': x['answer'],
+            } for x in submissions]
+
+            return result(result_submissions)
