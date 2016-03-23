@@ -5,7 +5,9 @@ from zipfile import ZipFile
 
 import json
 import mimetypes
+import re
 
+from django.conf import settings
 from django.core.files.base import File
 from django.core.files.storage import default_storage
 from path import path
@@ -320,6 +322,8 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
     def get_queue_student_response(self, submission=None, dump=True):
         # TODO: Protect this with hash
         base_url = self.runtime.handler_url(self, 'get_submitted_archives', thirdparty=True)
+        base_url = re.sub("http.?//%s" % settings.SITE_NAME, settings.XQUEUE_INTERFACE.get("callback_url"), base_url)
+
         if submission is None:
             submission = {}
         result = {
