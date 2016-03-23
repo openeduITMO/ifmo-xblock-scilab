@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from xblock.core import XBlock
 from xblock.fragment import Fragment
+from xqueue_api.utils import deep_update
 from webob.response import Response
 
 from .utils import require
@@ -116,7 +117,7 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
         if context is None:
             context = {}
 
-        context.update(self.get_student_context())  # deep update?
+        deep_update(context, {'render_context': self.get_student_context()})
 
         fragment = Fragment()
         fragment.add_content(self.load_template('student_view.mako', context=context, package='xblock_ifmo'))

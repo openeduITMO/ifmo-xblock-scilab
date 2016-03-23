@@ -23,7 +23,7 @@ class FragmentMakoChain(Fragment):
             self.context = {}
 
         self.build_chain()
-        return self.template.render(**self.context)
+        return self.template.render(**self.context.get('render_context', {}))
 
     def build_chain(self):
 

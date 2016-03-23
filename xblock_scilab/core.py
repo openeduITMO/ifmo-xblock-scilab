@@ -46,7 +46,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         if context is None:
             context = dict()
 
-        context.update(self.get_student_context())
+        deep_update(context, {'render_context': self.get_student_context()})
 
         parent = super(ScilabXBlock, self)
         if hasattr(parent, 'student_view'):
@@ -71,7 +71,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         context.update(self._get_instructor_context())
 
         fragment = Fragment()
-        fragment.add_content(self.load_template('xblock_scilab/studio_view.html', context))
+        fragment.add_content(self.load_template('xblock_scilab/studio_view.html', context, render=True))
         fragment.add_css(self.load_css('studio_view.css'))
         fragment.add_javascript(self.load_js('studio_view.js'))
         fragment.initialize_js('ScilabXBlockStudioView')
