@@ -126,6 +126,8 @@ function ScilabXBlockStudentView(runtime, element)
                 })
             }, 5000);
         }
+
+        MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
     }
 
     function disable_controllers(context)
