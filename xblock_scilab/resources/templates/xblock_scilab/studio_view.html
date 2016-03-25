@@ -52,6 +52,30 @@
                     </div>
                 </li>
 
+                <li class="field comp-setting-entry">
+                    <div class="wrapper-comp-setting">
+                        <label for="input_{{id}}_time_limit_generate" class="label setting-label">Лимит времени на генерацию</label>
+                        <input id="input_{{id}}_time_limit_generate" class="input setting-input" type="text" name="time_limit_generate" value="<%= time_limit_generate %>" />
+                    </div>
+                    <span class="tip setting-help">Максимальное время в секундах, отведённое на генерацию варианта задания. Если не задано, то используется значение по умолчанию 10 секунд.</span>
+                </li>
+
+                <li class="field comp-setting-entry">
+                    <div class="wrapper-comp-setting">
+                        <label for="input_{{id}}_time_limit_execute" class="label setting-label">Лимит времени на исполнение</label>
+                        <input id="input_{{id}}_time_limit_execute" class="input setting-input" type="text" name="time_limit_execute" value="<%= time_limit_execute %>" />
+                    </div>
+                    <span class="tip setting-help">Максимальное время в секундах, отведённое на исполнение пользовательского решения. Если не задано, то используется значение по умолчанию 10 секунд.</span>
+                </li>
+
+                <li class="field comp-setting-entry">
+                    <div class="wrapper-comp-setting">
+                        <label for="input_{{id}}_time_limit_check" class="label setting-label">Лимит времени на проверку</label>
+                        <input id="input_{{id}}_time_limit_check" class="input setting-input" type="text" name="time_limit_check" value="<%= time_limit_check %>" />
+                    </div>
+                    <span class="tip setting-help">Максимальное время в секундах, отведённое на проверку пользовательского решения. Если не задано, то используется значение по умолчанию 10 секунд.</span>
+                </li>
+
             </ul>
         </div>
 

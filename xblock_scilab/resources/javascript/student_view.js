@@ -91,9 +91,9 @@ function ScilabXBlockStudentView(runtime, element)
             });
 
             $(element).find('.staff-reset-state-btn').off('click').on('click', function(e) {
-                if (!confirm('Do you really want to reset state?')) {
-                    return;
-                }
+                //if (!confirm('Do you really want to reset state?')) {
+                //    return;
+                //}
                 disable_controllers(element);
                 var data = {
                     'user_login': $(element).find('input[name="user"]').val()

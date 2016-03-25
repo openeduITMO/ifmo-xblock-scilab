@@ -131,6 +131,9 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
                 'weight': self.weight,
                 'attempts': self.attempts,
                 'queue_name': self.queue_name,
+                'time_limit_generate': self.time_limit_generate,
+                'time_limit_execute': self.time_limit_execute,
+                'time_limit_check': self.time_limit_check,
             }),
         }
 
@@ -139,6 +142,9 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
     @XBlock.json_handler
     def save_settings(self, data, suffix):
         result = super(ScilabXBlock, self).save_settings(data)
+        self.time_limit_generate = data.get('time_limit_generate')
+        self.time_limit_execute = data.get('time_limit_execute')
+        self.time_limit_check = data.get('time_limit_check')
         return result
 
     @XBlock.json_handler
@@ -159,8 +165,8 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             )
         return {
             "student_id": submission_id,
-            "course_id": self.course_id,
-            "item_id": self.location.block_id,
+            "course_id": str(self.course_id),
+            "item_id": str(self.location.block_id),
             "item_type": 'scilab_xblock',  # ???
         }
 
@@ -213,7 +219,11 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             payload = {
                 'method': 'check',
                 'student_info': self.queue_student_info,
-                'grader_payload': self.pregenerated if self.need_generate else None,
+                'grader_payload': json.dumps({
+                    'pregenerated': self.pregenerated if self.need_generate else None,
+                    'time_limit_execute': self.time_limit_execute,
+                    'time_limit_check': self.time_limit_check,
+                }),
                 'student_response': self.get_queue_student_response(submission),
             }
 
@@ -223,16 +233,6 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
                 ),
                 body=json.dumps(payload)
             )
-
-            # task = reserve_task(
-            #     self,
-            #     grader_payload=self._get_grader_payload(instructor_real_path),
-            #     system_payload=self._get_system_payload(),
-            #     student_input=self._get_student_input(submission),
-            #     task_type='SCILAB_CHECK',
-            #     save=True,
-            # )
-            # submit_task_grade(ScilabSubmissionGrade, task)
 
         except Exception as e:
             return _return_response({
@@ -366,6 +366,9 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         body = self.get_queue_student_response(dump=False)
         deep_update(body, {
             'method': 'generate',
+            'grader_payload': json.dumps({
+                'time_limit_generate': self.time_limit_generate,
+            }),
         })
 
         self.send_to_queue(header=header, body=json.dumps(body), state='GENERATING')
