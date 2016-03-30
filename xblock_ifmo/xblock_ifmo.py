@@ -5,7 +5,6 @@ import logging
 
 from courseware.models import StudentModule
 from django.contrib.auth.models import User
-from django.db import transaction
 from xblock.core import XBlock
 from xblock.fragment import Fragment
 from xqueue_api.utils import deep_update
@@ -24,7 +23,6 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
     has_score = True
     icon_class = 'problem'
 
-    @transaction.autocommit
     def save_now(self):
         """
         Большинство блоков используют celery на сервере, поэтому нужно

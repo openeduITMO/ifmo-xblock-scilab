@@ -319,7 +319,9 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
     def get_queue_student_response(self, submission=None, dump=True):
         # TODO: Protect this with hash
         base_url = self.runtime.handler_url(self, 'get_submitted_archives', thirdparty=True)
-        base_url = re.sub("http.?//%s" % settings.SITE_NAME, settings.XQUEUE_INTERFACE.get("callback_url"), base_url)
+        callback_url = settings.XQUEUE_INTERFACE.get("callback_url")
+        if callback_url:
+            base_url = re.sub("http.?//%s" % settings.SITE_NAME, callback_url, base_url)
 
         if submission is None:
             submission = {}
