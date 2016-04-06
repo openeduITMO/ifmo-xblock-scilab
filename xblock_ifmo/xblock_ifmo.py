@@ -120,6 +120,7 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
         fragment = Fragment()
         fragment.add_content(self.load_template('student_view.mako', context=context, package='xblock_ifmo'))
         fragment.add_javascript(self.load_js('init-modals.js', package='xblock_ifmo'))
+        fragment.add_css(self.load_css('modal.css', package='xblock_ifmo'))
 
         return fragment
 

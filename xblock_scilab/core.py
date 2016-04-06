@@ -152,19 +152,19 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         # TODO: Do user_state more like save_settings
         return self.get_response_user_state(self.get_student_context())
 
-    def student_submission_id(self, submission_id=None):
+    def student_submission_dict(self, anon_student_id=None):
         # pylint: disable=no-member
         """
         Returns dict required by the submissions app for creating and
         retrieving submissions for a particular student.
         """
-        if submission_id is None:
-            submission_id = self.xmodule_runtime.anonymous_student_id
-            assert submission_id != (
+        if anon_student_id is None:
+            anon_student_id = self.xmodule_runtime.anonymous_student_id
+            assert anon_student_id != (
                 'MOCK', "Forgot to call 'personalize' in test."
             )
         return {
-            "student_id": submission_id,
+            "student_id": anon_student_id,
             "course_id": str(self.course_id),
             "item_id": str(self.location.block_id),
             "item_type": 'scilab_xblock',  # ???
@@ -201,7 +201,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             instructor_real_path = self.get_instructor_path()
 
             # Сохраняем данные о решении
-            student_id = self.student_submission_id()
+            student_id = self.student_submission_dict()
             student_answer = {
                 "sha1": uploaded_sha1,
                 "filename": uploaded_filename,
@@ -306,7 +306,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         }
 
         if suffix:
-            user_id = self.student_submission_id(submission_id=suffix)
+            user_id = self.student_submission_dict(anon_student_id=suffix)
             submission = submissions_api.get_submission(user_id.get('student_id'))
             answer = submission['answer']
             response.update({
@@ -398,22 +398,31 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
 
         def result(message, success=True):
             return {
-                "success": False,
+                "success": success,
                 "message": message,
             }
 
-        submission_param = data.get('submission_id').split('+')
-        submission_id = None
-        username = submission_param[0]
-        if len(submission_param) > 1:
-            submission_id = submission_param[0]
+        def get_anon_id(username):
+            return self.runtime.service(self, 'user').get_anonymous_user_id(username, str(self.course_id))
 
-        if submission_id is None:
-            anon_id = self.runtime.service(self, 'user').get_anonymous_user_id(username, str(self.course_id))
-            if anon_id is None:
-                return result("User %s not found." % username, success=False)
+        def extract_user_and_attempt(user_and_attempt):
+            submission_param = user_and_attempt.split('+')
+            return (submission_param[0],
+                    get_anon_id(submission_param[0]),
+                    submission_param[1] if len(submission_param) > 1 else None)
 
-            submissions = submissions_api.get_submissions(self.student_submission_id(submission_id=anon_id))
+        (real_username, anon_id, attempt_id) = extract_user_and_attempt(data.get('submission_id'))
+
+        # Ensure user exists
+        if anon_id is None:
+            return result("User %s not found." % real_username, success=False)
+
+        student_dict = self.student_submission_dict(anon_student_id=anon_id)
+
+        # Get all attempts
+        if attempt_id is None:
+
+            submissions = submissions_api.get_submissions(student_dict)
             time_format = '%d.%m.%Y %H:%M:%S UTC'
 
             result_submissions = [{
@@ -425,3 +434,10 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             } for x in submissions]
 
             return result(result_submissions)
+
+        # Get specific attempt
+        else:
+
+            res = submissions_api.get_submission_annotation(student_dict, attempt_id)
+            return result(res)
+
