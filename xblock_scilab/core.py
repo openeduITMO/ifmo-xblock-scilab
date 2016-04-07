@@ -396,9 +396,10 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
     @XBlock.json_handler
     def get_submissions_data(self, data, suffix=''):
 
-        def result(message, success=True):
+        def result(message, success=True, response_type=None):
             return {
                 "success": success,
+                "type": response_type,
                 "message": message,
             }
 
@@ -429,11 +430,16 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
                 'student_item': x['student_item'],
                 'attempt_number': x['attempt_number'],
                 'submitted_at': x['submitted_at'].strftime(time_format),
-                'created_at': x['created_at'].strftime(time_format),
-                'answer': x['answer'],
+                # 'created_at': x['created_at'].strftime(time_format),
+                # 'answer': x['answer'],
             } for x in submissions]
 
-            return result(result_submissions)
+            response = {
+                'username': real_username,
+                'submissions': result_submissions,
+            }
+
+            return result(response, response_type="submissions")
 
         # Get specific attempt
         else:

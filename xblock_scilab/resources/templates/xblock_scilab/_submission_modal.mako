@@ -26,22 +26,28 @@
                 <tr>
                     <th>Попытка</th>
                     <th>Item</th>
-                    <th>Создано</th>
+                    <!-- <th>Создано</th> -->
                     <th>Загружено</th>
                 </tr>
             </thead>
             <tbody>
-            <% _.each(message, function(element, index) { %>
-                <tr>
-                    <td><%= element.attempt_number %></td>
-                    <td><%= element.student_item %></td>
-                    <td><%= element.created_at %></td>
-                    <td><%= element.submitted_at %></td>
+            <% _.each(message.submissions, function(i, index) { %>
+                <tr data-submission-id="<%= message.username %>+<%= i.attempt_number %>" class="submission-element">
+                    <td><%= i.attempt_number %></td>
+                    <td><%= i.student_item %></td>
+                    <!-- <td><%= i.created_at %></td> -->
+                    <td><%= i.submitted_at %></td>
                 </tr>
             <% }); %>
             </tbody>
         </table>
     </%text>
-</script>
+    </script>
+
+    <script type="text/template" class="server-error-template">
+    <%text>
+        <p>При загрузке данных произошла ошибка: <b><%= status %> <%= message %></b></p>
+    </%text>
+    </script>
 
 </section>
