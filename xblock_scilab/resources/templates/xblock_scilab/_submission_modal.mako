@@ -20,7 +20,7 @@
 
     <script type="text/template" class="submissions-list-template">
     <%text>
-        <p><b>Список пользовательских решений</b></p>
+        <p><b>Список пользовательских решений <%= username %></b></p>
         <table class="selectable">
             <thead>
                 <tr>
@@ -31,8 +31,8 @@
                 </tr>
             </thead>
             <tbody>
-            <% _.each(message.submissions, function(i, index) { %>
-                <tr data-submission-id="<%= message.username %>+<%= i.attempt_number %>" class="submission-element">
+            <% _.each(submissions, function(i, index) { %>
+                <tr data-submission-id="<%= username %>+<%= i.attempt_number %>" class="submission-element">
                     <td><%= i.attempt_number %></td>
                     <td><%= i.student_item %></td>
                     <!-- <td><%= i.created_at %></td> -->
@@ -47,6 +47,55 @@
     <script type="text/template" class="server-error-template">
     <%text>
         <p>При загрузке данных произошла ошибка: <b><%= status %> <%= message %></b></p>
+    </%text>
+    </script>
+
+    <script type="text/template" class="annotation-template">
+    <%text>
+        <input type="button" class="submissions-all" data-username="<%= username %>" value="Все решения <%= username %>"/><hr/>
+        <p>Информация о пользовательском решении:</p>
+
+        <p>
+            <table>
+                <tbody>
+                    <tr><td>Пользователь</td><td><%= username %></td></tr>
+                    <tr><td>Номер попытки</td><td><%= submission.attempt_number %></td></tr>
+                    <tr><td>Отправлено</td><td><%= submission.submitted_at %></td></tr>
+                </tbody>
+            </table>
+        </p>
+
+        <p><b>Ответ пользователя</b></p>
+        <%= rendered_answer %>
+
+        <% if(score){ %>
+            <p><b>Оценка за работу</b></p>
+            <p>
+                <table>
+                    <tr><th>Время</th><td><%= score.created_at %></td></tr>
+                    <tr><th>Максимальный балл</th><td><%= score.points_possible %></td></tr>
+                    <tr><th>Полученный балл</th><td><%= score.points_earned %></td></tr>
+                </table>
+            </p>
+        <% } else { %>
+            <p><b>Работа не была оценена</b></p>
+        <% } %>
+
+        <% if(annotation){ %>
+            <p><b>Аннотация к работе</b></p>
+            <table>
+                <tr><th>Аннотация</th><td><%= annotation %></td></tr>
+            </table>
+        <% } else { %>
+            <p><b>Нет связанной с работой аннотации</b></p>
+        <% } %>
+
+    </%text>
+    </script>
+
+    <script type="text/template" class="annotation-default-answer-template">
+    <%text>
+        <pre><%= answer %></pre>
     </%text>
     </script>
 

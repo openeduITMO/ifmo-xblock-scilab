@@ -17,7 +17,7 @@ from xblock.fragment import Fragment
 from xblock_ifmo.fragment import FragmentMakoChain
 from xblock_ifmo.xblock_ifmo import IfmoXBlock
 from xblock_ifmo.xblock_xqueue import XBlockXQueueMixin, xqueue_callback
-from xblock_ifmo.utils import now
+from xblock_ifmo.utils import now, datetime_mapper
 from xqueue_api.utils import deep_update
 from xqueue_api.xsubmission import XSubmissionResult
 from webob.response import Response
@@ -412,6 +412,8 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
                     get_anon_id(submission_param[0]),
                     submission_param[1] if len(submission_param) > 1 else None)
 
+        time_format = '%d.%m.%Y %H:%M:%S UTC'
+
         (real_username, anon_id, attempt_id) = extract_user_and_attempt(data.get('submission_id'))
 
         # Ensure user exists
@@ -424,15 +426,8 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         if attempt_id is None:
 
             submissions = submissions_api.get_submissions(student_dict)
-            time_format = '%d.%m.%Y %H:%M:%S UTC'
 
-            result_submissions = [{
-                'student_item': x['student_item'],
-                'attempt_number': x['attempt_number'],
-                'submitted_at': x['submitted_at'].strftime(time_format),
-                # 'created_at': x['created_at'].strftime(time_format),
-                # 'answer': x['answer'],
-            } for x in submissions]
+            result_submissions = [datetime_mapper(x, time_format) for x in submissions]
 
             response = {
                 'username': real_username,
@@ -444,6 +439,11 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         # Get specific attempt
         else:
 
-            res = submissions_api.get_submission_annotation(student_dict, attempt_id)
-            return result(res)
+            response = submissions_api.get_submission_annotation(student_dict, attempt_id)
+            response['username'] = real_username
+
+            if not response:
+                return result("Решение не найдено")
+
+            return result(datetime_mapper(response, time_format), response_type="annotation", success=True)
 

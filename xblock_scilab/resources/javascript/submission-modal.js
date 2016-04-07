@@ -1,8 +1,10 @@
-function SubmissionModal(runtime, xblock, element)
+function SubmissionModal(runtime, xblock, element, hooks)
 {
     var templates = {
         submissions: _.template($(element).find('.submissions-list-template').text()),
-        server_error: _.template($(element).find('.server-error-template').text())
+        annotation: _.template($(element).find('.annotation-template').text()),
+        server_error: _.template($(element).find('.server-error-template').text()),
+        default_answer: _.template($(element).find('.annotation-default-answer-template').text())
     };
     var handlers = {
         get_submission_info: function(e) {
@@ -18,7 +20,9 @@ function SubmissionModal(runtime, xblock, element)
                     if (!data.success) {
                         handlers.error($modal, data.message);
                     } else if (data.type == "submissions") {
-                        handlers.get_submissions_list($modal, data);
+                        handlers.get_submissions_list($modal, data.message);
+                    } else if (data.type == "annotation") {
+                        handlers.get_annotation($modal, data.message);
                     } else {
                         handlers.error($modal, 'Received unknown data of type ' + data.type);
                         console.warn('Received unknown data of type ' + data.type);
@@ -32,6 +36,19 @@ function SubmissionModal(runtime, xblock, element)
             $modal.find('.submission-element').click(function(e) {
                 var $tr = $(e.delegateTarget);
                 $modal.find("[name='submission_id']").val($tr.data('submission-id'));
+                $modal.find(".staff-get-submission-info-btn").click();
+            });
+        },
+        get_annotation: function($modal, data) {
+            if(hooks.render_student_answer != 'undefined') {
+                data.rendered_answer = hooks.render_student_answer(data.submission.answer);
+            } else {
+                data.rendered_answer = templates.default_answer({answer: data.submission.answer})
+            }
+            $modal.find('.staff-info-container').html(templates.annotation(data));
+            $modal.find('.submissions-all').click(function(e){
+               var $btn = $(e.delegateTarget);
+                $modal.find("[name='submission_id']").val($btn.data('username'));
                 $modal.find(".staff-get-submission-info-btn").click();
             });
         },

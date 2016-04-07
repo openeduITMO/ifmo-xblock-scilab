@@ -58,6 +58,12 @@ function ScilabXBlockStudentView(runtime, element)
         return obj;
     };
 
+    var hooks = {
+        render_student_answer: function(data) {
+            return JSON.stringify(data);
+        }
+    };
+
     /*================================================================================================================*/
 
     function render(data)
@@ -164,7 +170,7 @@ function ScilabXBlockStudentView(runtime, element)
         } else {
             require(["jquery", "underscore", "jquery.fileupload"], init_xblock);
         }
-        init_modals(runtime, element, $, _);
+        init_modals(runtime, element, $, _, hooks);
     });
 
 }

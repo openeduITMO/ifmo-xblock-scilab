@@ -45,3 +45,21 @@ def reify(meth):
         inst.__dict__[meth.__name__] = value
         return value
     return property(getter)
+
+
+def datetime_mapper(x, date_format):
+    """
+
+    :param x:
+    :return:
+    """
+
+    def transform_value(value):
+        if isinstance(value, dict):
+            return datetime_mapper(value, date_format)
+        elif isinstance(value, datetime.datetime):
+            return value.strftime(date_format)
+        else:
+            return value
+
+    return dict(map(lambda (key, val): (key, transform_value(val)), x.items()))
