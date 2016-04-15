@@ -5,6 +5,7 @@
 
         ${self.task_template()}
         ${self.upload_template()}
+        ${self.annotation_template()}
 
 
         <div class="ifmo-xblock-content problem">
@@ -131,3 +132,29 @@
         <button class="button button-highlighted upload_do" data-in-progress="Идёт отправка...">Отправить <%text><%= filename %></%text></button>
     </script>
 </%block>
+
+<%block name="annotation_template"><%text>
+<script type="text/template" class="scilab-template-annotation">
+<%
+    try {
+        annotation_details = JSON.parse(annotation.reason);
+    } catch(err) {
+        annotation_details = {feedback: 'Submission has annotation, but error occurred while parsing it.'};
+        annotation = {annotation_type: 'annotation parse error'};
+        console.error(err);
+    }
+%>
+    <style>
+        table.annotation td {text-align: left;}
+        table.annotation pre {margin: 0; padding: 0; font-size: 0.8em;}
+    </style>
+    <table class="annotation">
+        <tr><th>Type</th><td><%= annotation.annotation_type %></td></tr>
+        <!-- <tr><th>Reason</th><td><%= annotation.reason %></td></tr> -->
+        <tr><th>Feedback</th><td><%= annotation_details.feedback %></td></tr>
+        <tr><th>Pregenerated</th><td><pre><%= annotation_details.pregenerated %></pre></td></tr>
+        <tr><th>Execute Output</th><td><pre><%= annotation_details.output_execute %></pre></td></tr>
+        <tr><th>Check Output</th><td><pre><%= annotation_details.output_check %></pre></td></tr>
+    </table>
+</script>
+</%text></%block>

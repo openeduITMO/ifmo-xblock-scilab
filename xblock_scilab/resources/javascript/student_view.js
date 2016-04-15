@@ -42,7 +42,8 @@ function ScilabXBlockStudentView(runtime, element)
     var template = {
         main: get_template('script.ifmo-xblock-template-base'),
         upload_input: get_template("script.scilab-template-upload-input"),
-        upload_selected: get_template("script.scilab-template-upload-selected")
+        upload_selected: get_template("script.scilab-template-upload-selected"),
+        annotation: get_template("script.scilab-template-annotation")
     };
 
     var deplainify = function(obj) {
@@ -61,6 +62,9 @@ function ScilabXBlockStudentView(runtime, element)
     var hooks = {
         render_student_answer: function(data) {
             return JSON.stringify(data);
+        },
+        render_annotation: function(data) {
+            return template.annotation(data);
         }
     };
 

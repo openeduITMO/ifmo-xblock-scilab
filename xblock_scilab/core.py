@@ -12,6 +12,7 @@ from django.core.files.base import File
 from django.core.files.storage import default_storage
 from path import path
 from submissions import api as submissions_api
+from ifmo_submissions import api as ifmo_submissions_api
 from xblock.core import XBlock
 from xblock.fragment import Fragment
 from xblock_ifmo.fragment import FragmentMakoChain
@@ -344,7 +345,10 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         # TODO: Validate submission
         # submission = submissions_api.get_submission(submission_uid)
 
-        submissions_api.set_score(submission_uid, int(100*submission_result.score), 100)
+        submissions_api.set_score(submission_uid, int(100*submission_result.score), 100,
+                                  annotation_reason=submission_result.msg,
+                                  annotation_creator='xblock_scilab',
+                                  annotation_type='check')
 
         self.points = submission_result.score
         self.runtime.publish(self, 'grade', {
@@ -439,7 +443,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         # Get specific attempt
         else:
 
-            response = submissions_api.get_submission_annotation(student_dict, attempt_id)
+            response = ifmo_submissions_api.get_submission_annotation(student_dict, attempt_id)
             response['username'] = real_username
 
             if not response:

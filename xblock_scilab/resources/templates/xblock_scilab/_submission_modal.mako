@@ -83,9 +83,7 @@
 
         <% if(annotation){ %>
             <p><b>Аннотация к работе</b></p>
-            <table>
-                <tr><th>Аннотация</th><td><%= annotation %></td></tr>
-            </table>
+            <%= rendered_annotation %>
         <% } else { %>
             <p><b>Нет связанной с работой аннотации</b></p>
         <% } %>
@@ -96,6 +94,14 @@
     <script type="text/template" class="annotation-default-answer-template">
     <%text>
         <pre><%= answer %></pre>
+    </%text>
+    </script>
+
+    <script type="text/template" class="annotation-default-annotation-template">
+    <%text>
+        <table>
+            <tr><th>Аннотация</th><td><%= annotation %></td></tr>
+        </table>
     </%text>
     </script>
 

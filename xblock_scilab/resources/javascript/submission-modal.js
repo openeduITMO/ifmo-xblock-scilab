@@ -4,7 +4,8 @@ function SubmissionModal(runtime, xblock, element, hooks)
         submissions: _.template($(element).find('.submissions-list-template').text()),
         annotation: _.template($(element).find('.annotation-template').text()),
         server_error: _.template($(element).find('.server-error-template').text()),
-        default_answer: _.template($(element).find('.annotation-default-answer-template').text())
+        default_answer: _.template($(element).find('.annotation-default-answer-template').text()),
+        default_annotation: _.template($(element).find('.annotation-default-annotation-template').text())
     };
     var handlers = {
         get_submission_info: function(e) {
@@ -40,10 +41,16 @@ function SubmissionModal(runtime, xblock, element, hooks)
             });
         },
         get_annotation: function($modal, data) {
-            if(hooks.render_student_answer != 'undefined') {
+            console.log(data);
+            if('render_student_answer' in hooks) {
                 data.rendered_answer = hooks.render_student_answer(data.submission.answer);
             } else {
                 data.rendered_answer = templates.default_answer({answer: data.submission.answer})
+            }
+            if('render_annotation' in hooks) {
+                data.rendered_annotation = hooks.render_annotation({annotation: data.annotation});
+            } else {
+                data.rendered_annotation = templates.default_annotation({annotation: data.annotation})
             }
             $modal.find('.staff-info-container').html(templates.annotation(data));
             $modal.find('.submissions-all').click(function(e){
