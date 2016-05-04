@@ -146,6 +146,34 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         self.time_limit_generate = data.get('time_limit_generate')
         self.time_limit_execute = data.get('time_limit_execute')
         self.time_limit_check = data.get('time_limit_check')
+
+        # Извлекаем информацию об оригинальном архиве и драфте
+        fs_path = self.instructor_archive_meta.get('fs_path')
+        draft_fs_path = self.instructor_archive_meta.get('draft', {}).get('fs_path')
+
+        # Сейчас оригинального файла может не существовать, поэтому вычислим его расположение
+
+        # Перемещать нам нужно файл только если в драфте что-то есть
+        storage = default_storage
+        if draft_fs_path and storage.exists(draft_fs_path):
+
+            # Удаляем существующий оригинальный файл
+            if fs_path and storage.exists(fs_path):
+                storage.delete(fs_path)
+
+            # Вычисляем новый адрес архива
+            new_fs_path = draft_fs_path[:-len(".~draft")]
+
+            # Сохраняем из драфта, операции move нет, поэтому только open...
+            storage.save(new_fs_path, storage.open(draft_fs_path))
+
+            # Подчищаем draft
+            storage.delete(draft_fs_path)
+
+            # Сохраняем мета-информацию о драфте
+            self.instructor_archive_meta = self.instructor_archive_meta['draft']
+            self.instructor_archive_meta['fs_path'] = new_fs_path
+
         return result
 
     @XBlock.json_handler
@@ -198,8 +226,8 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             uploaded_mimetype = mimetypes.guess_type(upload.file.name)[0]
 
             # Реальные названия файлов в ФС
-            real_path = file_storage_path(self.location, uploaded_sha1, uploaded_filename)
-            instructor_real_path = self.get_instructor_path()
+            fs_path = file_storage_path(self.location, uploaded_sha1)
+            instructor_fs_path = self.get_instructor_path()
 
             # Сохраняем данные о решении
             student_id = self.student_submission_dict()
@@ -207,15 +235,15 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
                 "sha1": uploaded_sha1,
                 "filename": uploaded_filename,
                 "mimetype": uploaded_mimetype,
-                "real_path": real_path,
-                "instructor_real_path": instructor_real_path,
+                "real_path": fs_path,
+                "instructor_real_path": instructor_fs_path,
             }
             submission = submissions_api.create_submission(student_id, student_answer)
 
             # Сохраняем файл с решением
-            if default_storage.exists(real_path):
-                default_storage.delete(real_path)
-            default_storage.save(real_path, uploaded_file)
+            if default_storage.exists(fs_path):
+                default_storage.delete(fs_path)
+            default_storage.save(fs_path, uploaded_file)
 
             payload = {
                 'method': 'check',
@@ -246,33 +274,70 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         return _return_response()
 
     @XBlock.handler
-    def upload_instructor_checker(self, request, suffix):
+    def upload_instructor_archive(self, request, suffix):
+        """
+        Обработчик загрузки архива инструктора.
 
-        upload = request.params['instructor_checker']
+        Вызывается, когда в студии инструктор нажимает кнопку "Загрузить"
+        напротив поля "Архив инструктора".
+
+        Проводит валидацию архива и временно сохраняет его. Позднее, он может
+        быт восстановлен обработчиком "save_settings". Защиты от параллельной
+        загрузки несколькими инструкторами (или в нескольких окнах браузера)
+        не предусмотрено.
+
+        :param request:
+        :param suffix:
+        :return:
+        """
+
+        def get_archive_signature(archive):
+            """
+            Формирует подпись архива (файла) на основании sha1 и текущего времени
+
+            :param archive: file-object
+            :return: tuple(sha1, signature)
+            """
+            import hashlib
+            import datetime
+            sha1 = get_sha1(archive)
+            md5 = hashlib.md5()
+            md5.update(sha1)
+            md5.update(datetime.datetime.isoformat(datetime.datetime.now()))
+            return sha1, md5.hexdigest()
+
+        upload = request.params['instructor_archive']
 
         self.validate_instructor_archive(upload.file)
 
         uploaded_file = File(upload.file)
 
-        real_path = file_storage_path(
-            self.location,
-            'instructor_checker',
-            upload.file.name
-        )
+        archive_sha1, archive_signature = get_archive_signature(uploaded_file)
+        archive_name = "instructor.{signature}.~draft".format(name=upload.file.name, signature=archive_signature)
+        fs_path = file_storage_path(self.location, archive_name)
 
-        if default_storage.exists(real_path):
-            default_storage.delete(real_path)
-        default_storage.save(real_path, uploaded_file)
+        # Сохраняем временную информацию до того как нажата кнопка "Save"
+        self.instructor_archive_meta['draft'] = {
+            'sha1': get_sha1(uploaded_file),
+            'upload_at': None,
+            'upload_by': None,
+            'fs_path': fs_path,
+        }
+
+        if default_storage.exists(fs_path):
+            default_storage.delete(fs_path)
+        default_storage.save(fs_path, uploaded_file)
+
 
         return Response(json_body={})
 
-    def _get_grader_payload(self, instructor_checker):
+    def _get_grader_payload(self, instructor_archive):
         """
         Данные, завясящие исключительно от модуля, но не возволяющие идентифицировать сам модуль.
         :return:
         """
         return {
-            'filename': instructor_checker,
+            'filename': instructor_archive,
         }
 
     def _get_system_payload(self):
@@ -299,11 +364,11 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             with default_storage.open(filename, 'r') as f:
                 return b64encode(f.read())
 
-        instructor_real_path = self.get_instructor_path()
+        instructor_fs_path = self.get_instructor_path()
 
         response = {
-            'instructor_archive_name': instructor_real_path,
-            'instructor_archive': get_64_contents(instructor_real_path),
+            'instructor_archive_name': instructor_fs_path,
+            'instructor_archive': get_64_contents(instructor_fs_path),
         }
 
         if suffix:
@@ -380,7 +445,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         self.send_to_queue(header=header, body=json.dumps(body), state='GENERATING')
 
     def get_instructor_path(self):
-        return file_storage_path(self.location, 'instructor_checker', 'instructor_checker.zip')
+        return self.instructor_archive_meta.get('fs_path')
 
     @xqueue_callback
     def set_pregenerated(self, pregenerated):

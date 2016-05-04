@@ -35,12 +35,12 @@
 
                 <li class="field comp-setting-entry">
                     <div class="wrapper-comp-setting">
-                        <label for="input_{{id}}_instructor_checker" class="label setting-label">Архив инструктора</label>
-                        <div class="ifmo-xblock-scilab-studio-checker-container">
-                                <input id="input_{{id}}_instructor_checker" class="setting-input ifmo-xblock-scilab-studio-checker-file" type="file" name="instructor_checker"/>
-                                <div class="ifmo-xblock-scilab-studio-checker-selected">Архив не выбран</div>
+                        <label for="input_{{id}}_instructor_archive" class="label setting-label">Архив инструктора</label>
+                        <div class="ifmo-xblock-scilab-studio-archive-container">
+                                <input id="input_{{id}}_instructor_archive" class="setting-input ifmo-xblock-scilab-studio-archive-file" type="file" name="instructor_archive"/>
+                                <div class="ifmo-xblock-scilab-studio-archive-selected">Архив не выбран</div>
                         </div>
-                        <input type="button" class="upload_instructor_checker ifmo-xblock-scilab-studio-checker-upload" value="Отправить">
+                        <input type="button" class="upload_instructor_archive ifmo-xblock-scilab-studio-archive-upload" value="Отправить">
                     </div>
                     <span class="tip setting-help">Архив инструктора должен содержать файл <b>check.sce</b>. Этот сценарий должен создать файл <b>check_output</b>, содержащий вещественное число от 0 до 1.
                         Архив также может содержать сценарий с именем <b>generate.sce</b>, создающий файл <b>pregenerated</b>.</span>

@@ -151,7 +151,7 @@
     <table class="annotation">
         <tr><th>Type</th><td><%= annotation.annotation_type %></td></tr>
         <!-- <tr><th>Reason</th><td><%= annotation.reason %></td></tr> -->
-        <tr><th>Feedback</th><td><%= annotation_details.feedback %></td></tr>
+        <tr><th>Feedback</th><td><%= annotation_details.message %></td></tr>
         <tr><th>Pregenerated</th><td><pre><%= annotation_details.pregenerated %></pre></td></tr>
         <tr><th>Execute Output</th><td><pre><%= annotation_details.output_execute %></pre></td></tr>
         <tr><th>Check Output</th><td><pre><%= annotation_details.output_check %></pre></td></tr>

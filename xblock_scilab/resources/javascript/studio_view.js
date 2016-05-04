@@ -5,17 +5,17 @@ function ScilabXBlockStudioView(runtime, element)
     var saveUrl = runtime.handlerUrl(element, 'save_settings');
 
     var upload_logic = {
-        url: runtime.handlerUrl(element, 'upload_instructor_checker'),
+        url: runtime.handlerUrl(element, 'upload_instructor_archive'),
         add: function (e, data) {
-            element.find("div.ifmo-xblock-scilab-studio-checker-selected").html('Selected ' + data.files[0].name);
-            element.find("input.ifmo-xblock-scilab-studio-checker-upload").off('click').on('click', function () {
-                element.find("input.ifmo-xblock-scilab-studio-checker-upload").val('Uploading...');
+            element.find("div.ifmo-xblock-scilab-studio-archive-selected").html('Selected ' + data.files[0].name);
+            element.find("input.ifmo-xblock-scilab-studio-archive-upload").off('click').on('click', function () {
+                element.find("input.ifmo-xblock-scilab-studio-archive-upload").val('Идёт загрузка...');
                 data.submit();
             });
         },
         done: function (e, data) {
-            alert('Checker successfully uploaded');
-            element.find("input.ifmo-xblock-scilab-studio-checker-upload").val('Upload');
+            alert('Архив инструктора успешно загружен');
+            element.find("input.ifmo-xblock-scilab-studio-archive-upload").val('Загрузить');
         }
     };
 
@@ -47,7 +47,7 @@ function ScilabXBlockStudioView(runtime, element)
         var template = _.template(xblock.find('.ifmo-xblock-template-base').text());
         xblock.find('.ifmo-xblock-content').html(template(data));
 
-        xblock.find('input.ifmo-xblock-scilab-studio-checker-file').fileupload(upload_logic);
+        xblock.find('input.ifmo-xblock-scilab-studio-archive-file').fileupload(upload_logic);
     }
 
     $(function(){

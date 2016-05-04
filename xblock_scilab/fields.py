@@ -1,4 +1,4 @@
-from xblock.fields import Boolean, Integer, Scope, String
+from xblock.fields import Boolean, Dict, Integer, Scope, String
 from xblock_ifmo.xblock_ifmo_fields import IfmoXBlockFields
 
 
@@ -7,6 +7,11 @@ class ScilabXBlockFields(IfmoXBlockFields):
     instructor_filename = String(
         display_name="Instructor file name",
         scope=Scope.settings
+    )
+
+    instructor_archive_meta = Dict(
+        default={},
+        scope=Scope.settings,
     )
 
     celery_task_id = String(

@@ -13,17 +13,16 @@ def get_sha1(file_handler):
     return sha1.hexdigest()
 
 
-def file_storage_path(location, sha1, filename):
+def file_storage_path(location, filename):
     # pylint: disable=no-member
     """
     Get file path of storage.
     """
     path = (
         '{loc.org}/{loc.course}/{loc.block_type}/{loc.block_id}'
-        '/{sha1}{ext}'.format(
+        '/{filename}'.format(
             loc=location,
-            sha1=sha1,
-            ext=os.path.splitext(filename)[1]
+            filename=filename
         )
     )
     return path

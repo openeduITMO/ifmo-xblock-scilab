@@ -4,7 +4,7 @@
     font-size: 1.6rem;
 }
 
-.ifmo-xblock-scilab-studio-checker-container {
+.ifmo-xblock-scilab-studio-archive-container {
     width: 30%;
     height: 43px;
     border: 1px solid darkgray;
@@ -14,7 +14,7 @@
     position: relative;
 }
 
-.ifmo-xblock-scilab-studio-checker-file {
+.ifmo-xblock-scilab-studio-archive-file {
     opacity: 0;
     width: 100% !important;
     height: 100%;
@@ -23,11 +23,11 @@
     cursor: pointer;
 }
 
-.ifmo-xblock-scilab-studio-checker-selected {
+.ifmo-xblock-scilab-studio-archive-selected {
     padding: 10px;
     display: inline-block;
 }
 
-.ifmo-xblock-scilab-studio-checker-upload {
+.ifmo-xblock-scilab-studio-archive-upload {
     width: 14% !important;
 }
