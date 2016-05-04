@@ -7,7 +7,7 @@ function ScilabXBlockStudioView(runtime, element)
     var upload_logic = {
         url: runtime.handlerUrl(element, 'upload_instructor_archive'),
         add: function (e, data) {
-            element.find("div.ifmo-xblock-scilab-studio-archive-selected").html('Selected ' + data.files[0].name);
+            element.find("div.ifmo-xblock-scilab-studio-archive-selected").html('Выбран ' + data.files[0].name);
             element.find("input.ifmo-xblock-scilab-studio-archive-upload").off('click').on('click', function () {
                 element.find("input.ifmo-xblock-scilab-studio-archive-upload").val('Идёт загрузка...');
                 data.submit();
@@ -46,6 +46,13 @@ function ScilabXBlockStudioView(runtime, element)
         var data = xblock.data('metadata');
         var template = _.template(xblock.find('.ifmo-xblock-template-base').text());
         xblock.find('.ifmo-xblock-content').html(template(data));
+
+        console.log(data.instructor_archive);
+        console.log(xblock.find('div.ifmo-xblock-scilab-studio-archive-selected'));
+        if (data.instructor_archive != undefined) {
+            console.log(data.instructor_archive.filename);
+            xblock.find('div.ifmo-xblock-scilab-studio-archive-selected').html('Загружен ' + data.instructor_archive.filename);
+        }
 
         xblock.find('input.ifmo-xblock-scilab-studio-archive-file').fileupload(upload_logic);
     }

@@ -92,19 +92,21 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
 
         # TODO: Parents should declare what they provide for student context
 
-        # Получение пользовательского контектса и отрендеренного фрагмента
+        # Получение пользовательского контектса и отрендеренного фрагмента не
         # очень очевидно, так как собирается в обратном порядке. По хорошему,
         # нужно переписать это под ноль.
         # С связи с этим нельзя перезаписать текст задания (он устанавливается
         # контекстом выше). Именно для этого мы заводим отдельный параметр в
         # в контексте здесь.
+        context['need_generate'] = False
         if self.need_generate:
             text = ''
+            context['need_generate'] = True
             try:
                 if self.pregenerated:
                     text = self.description % tuple(self.pregenerated.split("\n"))
             except TypeError:
-                pass
+                text = self.description
         else:
             text = self.description
 
@@ -135,6 +137,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
                 'time_limit_generate': self.time_limit_generate,
                 'time_limit_execute': self.time_limit_execute,
                 'time_limit_check': self.time_limit_check,
+                'instructor_archive': self.instructor_archive_meta,
             }),
         }
 
@@ -318,6 +321,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
 
         # Сохраняем временную информацию до того как нажата кнопка "Save"
         self.instructor_archive_meta['draft'] = {
+            'filename': upload.file.name,
             'sha1': get_sha1(uploaded_file),
             'upload_at': None,
             'upload_by': None,
@@ -327,7 +331,6 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         if default_storage.exists(fs_path):
             default_storage.delete(fs_path)
         default_storage.save(fs_path, uploaded_file)
-
 
         return Response(json_body={})
 

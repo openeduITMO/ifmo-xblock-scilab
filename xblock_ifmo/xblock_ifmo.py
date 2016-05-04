@@ -165,6 +165,7 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
     def get_student_context_base(self, user=None):
         return {
             'meta': {
+                'location': str(self.scope_ids.usage_id),
                 'id': self.scope_ids.usage_id.block_id,
                 'name': self.display_name,
                 'text': self.description,

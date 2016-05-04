@@ -23,6 +23,10 @@
     <a class="instructor-info-action" href="#${meta['id']}-submissions-modal" id="${meta['id']}-submissions-button">Загруженные решения</a>
 </%block>
 
+<%block name="debug_info_rows">
+    <tr><th>Генерация задания</th><td>${u'Да' if need_generate else u'Нет'}</td></tr>
+</%block>
+
 <%block name="task_template">
     <script type="text/template" class="ifmo-xblock-template-base">
         <%doc>
@@ -148,7 +152,7 @@
         table.annotation td {text-align: left;}
         table.annotation pre {margin: 0; padding: 0; font-size: 0.8em;}
     </style>
-    <table class="annotation">
+    <table class="annotation vertical">
         <tr><th>Type</th><td><%= annotation.annotation_type %></td></tr>
         <!-- <tr><th>Reason</th><td><%= annotation.reason %></td></tr> -->
         <tr><th>Feedback</th><td><%= annotation_details.message %></td></tr>
