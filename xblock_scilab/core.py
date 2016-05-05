@@ -542,7 +542,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         Если suffix=='instructor', скачивается архив инструктора.
 
         Если suffix=='student', скачивается архив студента, предоставленный как ответ,
-        связанный с решением, идентификатор которого request.querystring.
+        sha1 которого содержится в request.querystring.
 
         :param request:
         :param suffix: 'instructor' or 'student'
@@ -571,7 +571,22 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             )
 
         elif suffix == 'student':
-            return Response("Not implemented", status=501)
+
+            return download(
+                file_storage_path(self.location, request.query_string),
+                request.query_string + '.zip'
+            )
+
+        elif suffix == 'instructor_prev':
+
+            # Скачать архив инструктора, которым было проверено определённое
+            # решение студента. Поскольку мы не сохраняем историю инструкторских
+            # архивов (тольки их сами), то и их имён у нас нет.
+
+            return download(
+                file_storage_path(self.location, request.query_string),
+                request.query_string + '.zip'
+            )
 
         else:
             return Response("Bad request", status=400)

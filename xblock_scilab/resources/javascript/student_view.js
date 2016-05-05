@@ -62,7 +62,21 @@ function ScilabXBlockStudentView(runtime, element)
 
     var hooks = {
         render_student_answer: function(data) {
-            return JSON.stringify(data);
+            console.log(data);
+
+            // Поскольку у нас нет доступа к идентификатору решения здесь,
+            // нам нужен дополнитеьный хендлер, получающий файл по его SHA,
+            // минуя обращение к submissions.api.
+            var student_file_id = data.sha1;
+            var instructor_file_id = /([^\/]*)$/.exec(data.instructor_real_path)[0];
+
+            var student_url = urls.download_archive + '/student?' + student_file_id;
+            var instructor_url = urls.download_archive + '/instructor_prev?' + instructor_file_id;
+
+            return '<p>' +
+                '<a href="' + student_url + '" class="button">Скачать решение ' + data.filename + '</a> ' +
+                '<a href="' + instructor_url + '" class="button">Скачать проверяющий архив</a>' +
+                '</p>';
         },
         render_annotation: function(data) {
             return template.annotation(data);
