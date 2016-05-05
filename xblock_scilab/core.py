@@ -170,8 +170,8 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         if draft_fs_path and storage.exists(draft_fs_path):
 
             # Удаляем существующий оригинальный файл
-            if fs_path and storage.exists(fs_path):
-                storage.delete(fs_path)
+            # if fs_path and storage.exists(fs_path):
+            #     storage.delete(fs_path)
 
             # Вычисляем новый адрес архива
             new_fs_path = draft_fs_path[:-len(".~draft")]
