@@ -230,6 +230,9 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             })
 
         try:
+
+            self.message = None
+
             # Извлечение данных о загруженном файле
             upload = request.params['submission']
             uploaded_file = File(upload.file)
@@ -432,6 +435,15 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
                 'value': submission_result.score * self.max_score(),
                 'max_value': self.max_score()
         })
+
+        annotation = ifmo_submissions_api.get_annotation(self.student_submission_dict())
+        self.message = None
+        try:
+            message = (json.loads(annotation.get('reason'))['message']).strip()
+            if message:
+                self.message = u"<b>Результат последней проверки:</b> %s" % message
+        except (ValueError, KeyError):
+            pass
 
     def validate_instructor_archive(self, uploaded_file):
 

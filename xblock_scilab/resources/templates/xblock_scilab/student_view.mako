@@ -79,7 +79,7 @@
 
 <%block name="message">
     <%text>
-        <% if (typeof message != 'undefined') { %>
+        <% if (typeof message != 'undefined' && message.text != '') { %>
         <div class="ifmo-xblock-message ifmo-xblock-message-<%= message.type %>"><%= message.text %></div>
         <% } %>
     </%text>
