@@ -5,7 +5,8 @@ function ScilabXBlockStudentView(runtime, element)
         reset_task: runtime.handlerUrl(element, 'reset_celery_task_id'),
         get_state: runtime.handlerUrl(element, 'get_user_state'),
         get_user_data: runtime.handlerUrl(element, 'get_user_data'),
-        reset_state: runtime.handlerUrl(element, 'reset_user_state')
+        reset_state: runtime.handlerUrl(element, 'reset_user_state'),
+        download_archive: runtime.handlerUrl(element, 'download_archive')
     };
 
     var upload_logic = {
@@ -136,6 +137,8 @@ function ScilabXBlockStudentView(runtime, element)
                 })
             }, 5000);
         }
+
+        $(element).find('a.staff-download-instructor-archive').attr('href', urls.download_archive + '/instructor');
 
         MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
     }

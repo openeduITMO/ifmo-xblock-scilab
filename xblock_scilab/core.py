@@ -10,9 +10,10 @@ import re
 from django.conf import settings
 from django.core.files.base import File
 from django.core.files.storage import default_storage
+from functools import partial
+from ifmo_submissions import api as ifmo_submissions_api
 from path import path
 from submissions import api as submissions_api
-from ifmo_submissions import api as ifmo_submissions_api
 from xblock.core import XBlock
 from xblock.fragment import Fragment
 from xblock_ifmo.fragment import FragmentMakoChain
@@ -25,6 +26,8 @@ from webob.response import Response
 
 from .fields import ScilabXBlockFields
 from .utils import get_sha1, file_storage_path
+
+BLOCK_SIZE = 8 * 1024
 
 
 @XBlock.needs("user")
@@ -122,6 +125,12 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
                     'type': 'info',
                 }
             })
+
+        if self._is_staff():
+            context.update({
+                'instructor_archive': self.instructor_archive_meta,
+            })
+
         return context
 
     def _get_instructor_context(self):
@@ -518,4 +527,54 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
                 return result("Решение не найдено")
 
             return result(datetime_mapper(response, time_format), response_type="annotation", success=True)
+
+    @XBlock.handler
+    def download_archive(self, request, suffix):
+        """
+        Обработчик скачивания архивов.
+
+        Вызывается в тот момент, когда инструктор нажимает на ссылку "Скачать архив".
+        В результате может быть скачан инструкторский архив с проверяющим кодом или
+        архив-ответ студента.
+
+        В данный момент подразумевается, что система оперирует исключительно zip-архивами.
+
+        Если suffix=='instructor', скачивается архив инструктора.
+
+        Если suffix=='student', скачивается архив студента, предоставленный как ответ,
+        связанный с решением, идентификатор которого request.querystring.
+
+        :param request:
+        :param suffix: 'instructor' or 'student'
+        :return: webob.Response
+        """
+
+        def download(fs_path, filename, content_type='application/zip'):
+            try:
+                file_descriptor = default_storage.open(fs_path)
+                app_iter = iter(partial(file_descriptor.read, BLOCK_SIZE), '')
+                return Response(
+                    app_iter=app_iter,
+                    content_type=content_type,
+                    content_disposition="attachment; filename=" + filename.encode('utf-8'),
+                )
+            except IOError:
+                return Response(
+                    "File {filename} not found".format(filename=filename),
+                    status=404,
+                )
+
+        if suffix == 'instructor':
+            return download(
+                self.instructor_archive_meta.get('fs_path'),
+                self.instructor_archive_meta.get('filename')
+            )
+
+        elif suffix == 'student':
+            return Response("Not implemented", status=501)
+
+        else:
+            return Response("Bad request", status=400)
+
+
 
