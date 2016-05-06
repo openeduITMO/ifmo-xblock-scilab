@@ -7,7 +7,9 @@ function ScilabXBlockStudioView(runtime, element)
     var upload_logic = {
         url: runtime.handlerUrl(element, 'upload_instructor_archive'),
         add: function (e, data) {
-            element.find("div.ifmo-xblock-scilab-studio-archive-selected").html('Выбран ' + data.files[0].name);
+            var selected = element.find("div.ifmo-xblock-scilab-studio-archive-selected");
+            selected.html('Выбран ' + data.files[0].name);
+            selected.data('status', 'selected');
             element.find("input.ifmo-xblock-scilab-studio-archive-upload").off('click').on('click', function () {
                 element.find("input.ifmo-xblock-scilab-studio-archive-upload").val('Идёт загрузка...');
                 data.submit();
@@ -30,6 +32,24 @@ function ScilabXBlockStudioView(runtime, element)
             data[input.name] = input.value;
         });
 
+        // Проверим статус архива: загружен, выбран или пуст
+        var selected = $(element).find('.ifmo-xblock-scilab-studio-archive-selected');
+        var stop_saving_confirm = "";
+
+        if(selected.data('status') == 'empty') {
+            stop_saving_confirm = 'Архив инструктора не был выбран.';
+        } else if(selected.data('status') == 'selected') {
+            stop_saving_confirm = 'Архив инструктора выбран, но не загружен.';
+        }
+
+        // Подтвердить действие
+        if(stop_saving_confirm != "") {
+            if (!confirm(stop_saving_confirm + " Продолжить сохранение?")) {
+                view.runtime.notify('error', {msg: stop_saving_confirm, title: 'SciLab XBlock'});
+                return false;
+            }
+        }
+
         $.ajax({
             type: "POST",
             url: saveUrl,
@@ -47,11 +67,10 @@ function ScilabXBlockStudioView(runtime, element)
         var template = _.template(xblock.find('.ifmo-xblock-template-base').text());
         xblock.find('.ifmo-xblock-content').html(template(data));
 
-        console.log(data.instructor_archive);
-        console.log(xblock.find('div.ifmo-xblock-scilab-studio-archive-selected'));
-        if (data.instructor_archive != undefined) {
-            console.log(data.instructor_archive.filename);
-            xblock.find('div.ifmo-xblock-scilab-studio-archive-selected').html('Загружен ' + data.instructor_archive.filename);
+        if (data.instructor_archive != undefined && data.instructor_archive.filename != undefined) {
+            var selected = xblock.find('div.ifmo-xblock-scilab-studio-archive-selected');
+            selected.html('Загружен ' + data.instructor_archive.filename);
+            selected.data('status', 'uploaded');
         }
 
         xblock.find('input.ifmo-xblock-scilab-studio-archive-file').fileupload(upload_logic);
