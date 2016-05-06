@@ -85,10 +85,21 @@ function ScilabXBlockStudentView(runtime, element)
 
     /*================================================================================================================*/
 
+    function pregenerated_replacer(str, pregen_arr) {
+        var replacer = function(pregen_arr) {
+            var arr = pregen_arr.slice();
+            return function () {
+                return arr.shift();
+            }
+        };
+        return str.replace(/%s/g, replacer(pregen_arr));
+    }
+
     function render(data)
     {
         var xblock = $(element).find('.ifmo-xblock-student');
-        xblock.find('.ifmo-xblock-content').html(template.main(data));
+        var template_content = pregenerated_replacer(template.main(data), data.pregenerated);
+        xblock.find('.ifmo-xblock-content').html(template_content);
 
         if (data.allow_submissions) {
             xblock.find('.upload_container').html(template.upload_input());

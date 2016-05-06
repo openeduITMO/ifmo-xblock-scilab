@@ -102,21 +102,19 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         # контекстом выше). Именно для этого мы заводим отдельный параметр в
         # в контексте здесь.
         context['need_generate'] = False
+        pregenerated = None
         if self.need_generate:
-            text = ''
             context['need_generate'] = True
             try:
                 if self.pregenerated:
-                    text = self.description % tuple(self.pregenerated.split("\n"))
+                    pregenerated = self.pregenerated.split("\n")
             except TypeError:
-                text = self.description
-        else:
-            text = self.description
+                pass
 
         context.update({
             'allow_submissions': True if self.due is None or now() > self.due else False,
             'task_status': self.queue_details.get('state', 'IDLE'),
-            'task_with_pregenerated': text,
+            'pregenerated': pregenerated,
         })
         if self.message is not None:
             context.update({

@@ -42,7 +42,7 @@
                         type
                     },
                     task_status,
-                    task_with_pregenerated,
+                    pregenerated,
                     student_state: {
                         score: {
                             string
@@ -85,13 +85,7 @@
     </%text>
 </%block>
 
-<%block name="task_text">
-    <%text>
-        <% if (task_with_pregenerated) { %>
-            <div class="task"><%= task_with_pregenerated %></div>
-        <% } %>
-    </%text>
-</%block>
+<%block name="task_text">${meta['text']}</%block>
 
 <%block name="controllers_box">
     <%text>
