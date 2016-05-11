@@ -5,7 +5,6 @@
 
 <%block name="block_body"/>
 
-
     % if student_state['is_staff']:
         % if not student_state['is_studio']:
 
@@ -45,15 +44,15 @@
                     <hr/>
                     <div id="${meta['id']}-staff-info">
                         <p>Состояние пользователя</p>
-                        <div class="staff-info-container" style="max-height: 600px; overflow-y: scroll;">
-##                             <pre>${context}</pre>
-                        </div>
+                        <div class="staff-info-container" style="max-height: 600px; overflow-y: scroll;"></div>
                     </div>
                 </div>
             </section>
-        % else:
-            <div><p><strong><i>Элементы управления недоступны в Студии.</i></strong></p></div>
         % endif
+    % endif
+
+    % if student_state['is_studio']:
+        <div><p><strong><i>Элементы управления недоступны в Студии.</i></strong></p></div>
     % endif
 
 </section>

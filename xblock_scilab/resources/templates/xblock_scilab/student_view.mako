@@ -7,10 +7,8 @@
         ${self.upload_template()}
         ${self.annotation_template()}
 
-
         <div class="ifmo-xblock-content problem">
             Подождите, задание загружается...
-            <pre>${context}</pre>
         </div>
 
     </section>
@@ -52,11 +50,11 @@
         </%doc>
         <h2 class="problem-header"><%text><%= meta.name %></%text></h2>
         <div class="problem-progress"><%text><%= student_state.score.string %></%text></div>
-        ${self.status()}
-        ${self.message()}
-        ${self.task_text()}
+        <div class="problem-status">${ self.status() }</div>
+        <div class="problem-message">${ self.message() }</div>
+        <div class="problem-text">${ self.task_text() }</div>
         % if not student_state['is_studio']:
-            ${self.controllers_box()}
+            <div class="problem-controllers">${self.controllers_box()}</div>
         % endif
     </script>
 </%block>

@@ -92,7 +92,13 @@ function ScilabXBlockStudentView(runtime, element)
                 return arr.shift();
             }
         };
-        return str.replace(/%s/g, replacer(pregen_arr));
+        if (pregen_arr != null) {
+            return str.replace(/%s/g, replacer(pregen_arr));
+        } else {
+            // В превью студии нет прегена, потому что там нет пользователя как такового
+            return str;
+        }
+
     }
 
     function render(data)
