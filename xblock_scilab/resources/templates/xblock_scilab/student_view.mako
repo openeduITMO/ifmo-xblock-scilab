@@ -26,7 +26,7 @@
 
 <%block name="debug_info_rows">
     <tr><th>Генерация задания</th><td>${u'Да' if need_generate else u'Нет'}</td></tr>
-    <tr><th>Архив инструктора</th><td><a href="#" class="staff-download-instructor-archive">${instructor_archive['filename']}</a></td></tr>
+    <tr><th>Архив инструктора</th><td><a href="#" class="staff-download-instructor-archive">${instructor_archive.get('filename', 'undefined')}</a></td></tr>
 </%block>
 
 <%block name="task_template">
