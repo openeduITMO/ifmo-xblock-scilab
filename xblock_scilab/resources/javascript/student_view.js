@@ -2,10 +2,7 @@ function ScilabXBlockStudentView(runtime, element)
 {
     var urls = {
         upload_logic: runtime.handlerUrl(element, 'upload_submission'),
-        reset_task: runtime.handlerUrl(element, 'reset_celery_task_id'),
-        get_state: runtime.handlerUrl(element, 'get_user_state'),
         get_user_data: runtime.handlerUrl(element, 'get_user_data'),
-        reset_state: runtime.handlerUrl(element, 'reset_user_state'),
         download_archive: runtime.handlerUrl(element, 'download_archive')
     };
 
@@ -22,7 +19,7 @@ function ScilabXBlockStudentView(runtime, element)
             });
             xblock.find(".upload_do").on('click', function () {
                 xblock.find(".upload_do").text("Uploading...");
-                disable_controllers(element);
+                helpers.disable_controllers(element);
                 data.submit();
             });
         },
@@ -47,17 +44,32 @@ function ScilabXBlockStudentView(runtime, element)
         annotation: get_template("script.scilab-template-annotation")
     };
 
-    var deplainify = function(obj) {
-        for (var key in obj) {
-            try {
-                if (obj.hasOwnProperty(key)) {
-                    obj[key] = deplainify(JSON.parse(obj[key]));
+    var helpers = {
+
+        deplainify: function(obj)
+        {
+            for (var key in obj) {
+                try {
+                    if (obj.hasOwnProperty(key)) {
+                        obj[key] = deplainify(JSON.parse(obj[key]));
+                    }
+                } catch (e) {
+                    console.log('failed to deplainify', obj);
                 }
-            } catch (e) {
-                console.log('failed to deplainify', obj);
             }
+            return obj;
+        },
+
+        disable_controllers: function(context)
+        {
+            $(context).find("input").addClass('disabled').attr("disabled", "disabled");
+        },
+
+        enable_controllers: function(context)
+        {
+            $(context).find("input").removeClass('disabled').removeAttr("disabled");
         }
-        return obj;
+
     };
 
     var hooks = {
@@ -112,51 +124,8 @@ function ScilabXBlockStudentView(runtime, element)
             xblock.find(".file_upload").fileupload(upload_logic);
         }
 
-        $(element).find('.staff-get-state-btn').off('click').on('click', function(e) {
-                disable_controllers(element);
-                var data = {
-                    'user_login': $(element).find('input[name="user"]').val()
-                };
-                $.ajax({
-                    url: urls.get_state,
-                    type: "POST",
-                    data: JSON.stringify(data),
-                    success: function(data){
-                        var state = deplainify(data);
-                        $(element).find('.staff-info-container').html('<pre>' + JSON.stringify(state, null, '  ') + '</pre>');
-                    },
-                    complete: function(data) {
-                        console.info('staff-get-state-btn', data);
-                        enable_controllers(element);
-                    }
-                });
-            });
-
-            $(element).find('.staff-reset-state-btn').off('click').on('click', function(e) {
-                //if (!confirm('Do you really want to reset state?')) {
-                //    return;
-                //}
-                disable_controllers(element);
-                var data = {
-                    'user_login': $(element).find('input[name="user"]').val()
-                };
-                $.ajax({
-                    url: urls.reset_state,
-                    type: "POST",
-                    data: JSON.stringify(data),
-                    success: function(data) {
-                        var state = deplainify(data);
-                        $(element).find('.staff-info-container').html('<pre>' + JSON.stringify(state, null, '  ') + '</pre>');
-                    },
-                    complete: function(data){
-                        console.info('staff-reset-state-btn', data);
-                        enable_controllers(element);
-
-                }});
-            });
-
         if (data.task_status == 'QUEUED') {
-            //disable_controllers(element);
+            // helpers.disable_controllers(element);
         }
 
         if (data.task_status != 'IDLE') {
@@ -172,16 +141,6 @@ function ScilabXBlockStudentView(runtime, element)
         $(element).find('a.staff-download-instructor-archive').attr('href', urls.download_archive + '/instructor');
 
         MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
-    }
-
-    function disable_controllers(context)
-    {
-        $(context).find("input").addClass('disabled').attr("disabled", "disabled");
-    }
-
-    function enable_controllers(context)
-    {
-        $(context).find("input").removeClass('disabled').removeAttr("disabled");
     }
 
     function init_xblock($, _)
@@ -208,7 +167,7 @@ function ScilabXBlockStudentView(runtime, element)
         } else {
             require(["jquery", "underscore", "jquery.fileupload"], init_xblock);
         }
-        init_modals(runtime, element, $, _, hooks);
+        init_modals(runtime, element, $, _, hooks, helpers);
     });
 
 }

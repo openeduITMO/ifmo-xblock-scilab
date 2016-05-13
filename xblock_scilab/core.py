@@ -34,14 +34,10 @@ BLOCK_SIZE = 8 * 1024
 class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
 
     package = __package__
+    __template_dirs__ = [path(__file__).dirname().abspath() / "resources" / "templates" / "xblock_scilab"]
 
     # Use this unless submissions api is used
     # always_recalculate_grades = True
-
-    # Пока не очень понятно, как избежать этой штуки.
-    template_dirs = [
-        path(__file__).dirname().abspath() / "resources" / "templates" / "xblock_scilab"
-    ]
 
     def student_view(self, context=None):
 
@@ -56,7 +52,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
 
         parent = super(ScilabXBlock, self)
         if hasattr(parent, 'student_view'):
-            fragment = FragmentMakoChain(base=parent.student_view(), lookup_dirs=self.template_dirs)
+            fragment = FragmentMakoChain(base=parent.student_view(), lookup_dirs=self.__template_dirs__)
         else:
             fragment = Fragment()
 

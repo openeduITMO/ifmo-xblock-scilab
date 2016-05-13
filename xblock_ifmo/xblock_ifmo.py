@@ -5,11 +5,13 @@ import logging
 
 from courseware.models import StudentModule
 from django.contrib.auth.models import User
+from path import path
 from xblock.core import XBlock
 from xblock.fragment import Fragment
 from xqueue_api.utils import deep_update
 from webob.response import Response
 
+from .fragment import FragmentMakoChain
 from .utils import require
 from .xblock_ifmo_fields import IfmoXBlockFields
 from .xblock_ifmo_resources import IfmoXBlockResources
@@ -22,6 +24,8 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
 
     has_score = True
     icon_class = 'problem'
+
+    __template_dirs = [path(__file__).dirname().abspath() / "resources" / "templates"]
 
     def save_now(self):
         """
@@ -117,47 +121,14 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
 
         deep_update(context, {'render_context': self.get_student_context()})
 
-        fragment = Fragment()
-        fragment.add_content(self.load_template('student_view.mako', context=context, package='xblock_ifmo'))
+        # Use init, instead of add_content, otherwise it will be re-rendered each time
+        fragment = FragmentMakoChain(lookup_dirs=self.__template_dirs,
+                                     content=self.load_template('student_view.mako', package='xblock_ifmo'))
         fragment.add_javascript(self.load_js('init-modals.js', package='xblock_ifmo'))
+        fragment.add_javascript(self.load_js('state-modal.js', package='xblock_ifmo'))
         fragment.add_css(self.load_css('modal.css', package='xblock_ifmo'))
 
         return fragment
-
-    def student_view_base(self, fragment, context=None, student_context=None):
-        """
-        Изменяем фрагмент xblock'а. Оборачиваем весь шаблон в дополнительный.
-        Все ресурсы оставляем без именений.
-
-        :param fragment: Исходный фрагмент
-        :return: Изменённый фрагмент
-        """
-
-        # Создаём новый фрагмент и копируем туда ресурсы
-        result = Fragment()
-        result.add_frag_resources(fragment)
-        result.initialize_js(fragment.js_init_fn, fragment.json_init_args)
-
-        if not isinstance(student_context, dict):
-            student_context = dict()
-
-        # Используем исходный контекст, но добавим тело
-        new_context = self.get_student_context_base()
-        new_context.update(student_context)
-
-        return_context = new_context
-        return_context.update({
-            'body': fragment.body_html(),
-            'context': json.dumps(new_context),
-        })
-
-        # Тело оборачиваем отдельно
-        result.add_content(self.load_template(
-            'student_view.html',
-            context=return_context,
-            package='xblock_ifmo'
-        ))
-        return result
 
     def get_student_context(self, user=None):
         return self.get_student_context_base(user)

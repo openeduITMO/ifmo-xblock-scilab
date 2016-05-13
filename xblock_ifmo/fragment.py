@@ -1,18 +1,38 @@
-from mako.lookup import TemplateLookup
+# -*- coding=utf-8 -*-
+
+from .lookup import TemplateLookup  # xblock_ifmo.lookup
 from mako.template import Template
 from xblock.fragment import Fragment
 
 
 class FragmentMakoChain(Fragment):
+    """
+    Класс, позволяющий последовательно оборачивать экземпляры Fragment друг в
+    друга.
+
+    Для того, чтобы цепочка отработала, шаблон должен наследоваться от шаблона
+    ifmo_xblock_base и определять блок block_body.
+
+    Порядок оборачивания не определён.
+    """
 
     base = None
-    template = None
     context = {}
     _content = None
     lookup_dirs = None
 
     def __init__(self, content=None, base=None, lookup_dirs=None):
-        assert base, FragmentMakoChain
+        """
+        Класс, позволяющий последовательно оборачивать экземпляры Fragment друг
+        в друга.
+
+        :param content: Содержимое фрагмента
+        :param base: Базовый фрагмент, тот, в который будет обёрнут этот фрагмент;
+                     должен быть экземпляром FragmentMakoChain или None
+        :param lookup_dirs: Директории поиска шаблонов
+        :return:
+        """
+        assert isinstance(base, FragmentMakoChain) or base is None
         super(FragmentMakoChain, self).__init__(content=content)
         self.base = base
         self.lookup_dirs = lookup_dirs
@@ -22,29 +42,60 @@ class FragmentMakoChain(Fragment):
         if self.context is None:
             self.context = {}
 
-        self.build_chain()
-        return self.template.render(**self.context.get('render_context', {}))
+        template = self.build_chain()
+        return template.render(**self.context.get('render_context', {}))
 
     def build_chain(self):
+        """
+        Строит цепочку шаблонов.
 
-        lookup = None
+        В цепочке каждый шаблон наследуется от одного и того же ifmo_xblock_base,
+        поэтому порядок оборачивания не определён (точнее, его вычисляет
+        метод super()). Поскольку при рендере шаблона используется исключительно
+        lookup от шаблона, над которым он вызван, а не собственный Lookup для
+        каждого из шаблона в коллекции, необходимо добавить в коллекцию все
+        пути и шаблоны, использующиеся в шаблоне выше по цепочке. Более того,
+        необходимо изменить имена шаблонов (ifmo_xblock_base) на уникальные.
 
-        if self.base is not None:
+        :param lookup: экземпляр TemplateLookup, в который будут записываться
+                       новые пути и шаблоны, использующиеся как родительские
 
-            lookup = TemplateLookup(directories=self.lookup_dirs)
+        :return: tuple(template, lookup, base_template_id)
+            - template -- шаблон, который должен будет стать родителем
+            - lookup -- изменённый lookup
+        """
 
-            if hasattr(self.base, 'build_chain'):
-                self.base.build_chain()
-                lookup.put_template('ifmo_xblock_base', self.base.template)
-            else:
-                lookup.put_string('ifmo_xblock_base', self.base.body_html())
+        def _build_chain(self, lookup=None):
 
-        self.template = Template(text=self._content, lookup=lookup)
+            old_base_name = "ifmo_xblock_base"
+            new_base_name = None
+
+            if self.base is not None:
+
+                import uuid
+                new_base_name = "{name}_{rnd}".format(name=old_base_name, rnd=str(uuid.uuid4()))
+
+                if hasattr(self.base, 'build_chain'):
+                    base_template, base_lookup = _build_chain(self.base, lookup)
+                    lookup.put_template(new_base_name, base_template)
+                else:
+                    lookup.put_string(new_base_name, self.base.body_html())
+
+                lookup.append_dirs(self.base.lookup_dirs)
+
+            return Template(
+                text=self._content.replace(old_base_name, new_base_name) if new_base_name else self._content,
+                lookup=lookup
+            ), lookup
+
+        lookup = TemplateLookup(directories=self.lookup_dirs)
+        template, _ = _build_chain(self, lookup)
+        return template
 
     @property
     def resources(self):
         seen = set()
-        parent_res = self.base.resources or []
+        parent_res = self.base.resources if self.base else []
         return [x for x in self._resources + parent_res if x not in seen and not seen.add(x)]
 
     @property
@@ -54,6 +105,3 @@ class FragmentMakoChain(Fragment):
     @content.setter
     def content(self, value):
         self._content = value
-
-
-
