@@ -86,7 +86,11 @@
     </%text>
 </%block>
 
-<%block name="task_text">${meta['text']}</%block>
+<%block name="task_text">
+    <%text><% if (task_status != 'GENERATING') { %></%text>
+        ${meta['text']}
+    <%text><% } %></%text>
+</%block>
 
 <%block name="controllers_box">
     <%text>

@@ -116,7 +116,8 @@ function ScilabXBlockStudentView(runtime, element)
     function render(data)
     {
         var xblock = $(element).find('.ifmo-xblock-student');
-        var template_content = pregenerated_replacer(template.main(data), data.pregenerated);
+        var template_content = data.task_status != 'GENERATING' ?
+            pregenerated_replacer(template.main(data), data.pregenerated) : template.main(data);
         xblock.find('.ifmo-xblock-content').html(template_content);
 
         if (data.allow_submissions) {
