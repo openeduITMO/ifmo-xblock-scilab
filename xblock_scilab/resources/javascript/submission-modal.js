@@ -1,4 +1,4 @@
-function SubmissionModal(runtime, xblock, element, hooks)
+function SubmissionModal(runtime, xblock, element, hooks, helpers)
 {
     var templates = {
         submissions: _.template($(element).find('.submissions-list-template').text()),
