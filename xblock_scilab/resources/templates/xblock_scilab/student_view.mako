@@ -21,10 +21,12 @@
 </%block>
 
 <%block name="instructor_actions">
+    ${parent.instructor_actions()}
     <a class="instructor-info-action" href="#${meta['id']}-submissions-modal" id="${meta['id']}-submissions-button">Загруженные решения</a>
 </%block>
 
 <%block name="debug_info_rows">
+    ${parent.debug_info_rows()}
     <tr><th>Генерация задания</th><td>${u'Да' if need_generate else u'Нет'}</td></tr>
     <tr><th>Архив инструктора</th><td><a href="#" class="staff-download-instructor-archive">${instructor_archive.get('filename', 'undefined')}</a></td></tr>
 </%block>
