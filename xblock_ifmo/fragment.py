@@ -1,8 +1,10 @@
 # -*- coding=utf-8 -*-
 
-from .lookup import TemplateLookup  # xblock_ifmo.lookup
 from mako.template import Template
 from xblock.fragment import Fragment
+
+from .lookup import TemplateLookup  # xblock_ifmo.lookup
+from .utils import deep_update
 
 
 class FragmentMakoChain(Fragment):
@@ -38,12 +40,11 @@ class FragmentMakoChain(Fragment):
         self.lookup_dirs = lookup_dirs
 
     def body_html(self):
-
-        if self.context is None:
-            self.context = {}
-
         template = self.build_chain()
         return template.render(**self.context.get('render_context', {}))
+
+    def add_context(self, new_context):
+        deep_update(self.context, new_context)
 
     def build_chain(self):
         """

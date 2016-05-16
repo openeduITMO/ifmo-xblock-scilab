@@ -50,18 +50,14 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
 
         deep_update(context, {'render_context': self.get_student_context()})
 
-        parent = super(ScilabXBlock, self)
-        if hasattr(parent, 'student_view'):
-            fragment = FragmentMakoChain(base=parent.student_view(), lookup_dirs=self.__template_dirs__)
-        else:
-            fragment = Fragment()
-
-        fragment.content = self.load_template('xblock_scilab/student_view.mako')
+        fragment = FragmentMakoChain(base=super(ScilabXBlock, self).student_view(),
+                                     lookup_dirs=self.__template_dirs__)
+        fragment.add_content(self.load_template('xblock_scilab/student_view.mako'))
+        fragment.add_context(context)
         fragment.add_css(self.load_css('student_view.css'))
         fragment.add_javascript(self.load_js('student_view.js'))
         fragment.add_javascript(self.load_js('submission-modal.js'))
         fragment.initialize_js('ScilabXBlockStudentView')
-        fragment.context = context
 
         return fragment
 
