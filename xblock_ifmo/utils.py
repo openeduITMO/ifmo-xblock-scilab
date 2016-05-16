@@ -1,5 +1,6 @@
 # -*- coding=utf-8 -*-
 
+import collections
 import datetime
 import pytz
 
@@ -63,3 +64,16 @@ def datetime_mapper(x, date_format):
             return value
 
     return dict(map(lambda (key, val): (key, transform_value(val)), x.items()))
+
+
+def deep_update(d, u):
+    for k, v in u.iteritems():
+        if isinstance(d, collections.MutableMapping):
+            if isinstance(v, collections.Mapping):
+                r = deep_update(d.get(k, {}), v)
+                d[k] = r
+            else:
+                d[k] = u[k]
+        else:
+            d = {k: u[k]}
+    return d
