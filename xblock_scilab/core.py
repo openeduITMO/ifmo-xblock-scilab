@@ -77,7 +77,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         fragment.initialize_js('ScilabXBlockSettingsView')
         return fragment
 
-    #==================================================================================================================#
+    # ================================================================================================================ #
 
     def get_student_context(self, user=None):
 
