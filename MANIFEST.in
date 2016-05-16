@@ -1,2 +1,3 @@
 include README.md
-recursive-include ifmo_mod/templates *
+recursive-include xblock_ifmo/resources *
+recursive-include xblock_scilab/resources *
