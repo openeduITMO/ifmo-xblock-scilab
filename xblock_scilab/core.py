@@ -61,15 +61,17 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
 
         return fragment
 
-    def studio_view(self, context):
+    def studio_view(self, context=None):
 
         if context is None:
             context = dict()
 
-        context.update(self._get_instructor_context())
+        deep_update(context, {'render_context': self._get_instructor_context()})
 
-        fragment = Fragment()
-        fragment.add_content(self.load_template('xblock_scilab/studio_view.html', context, render=True))
+        fragment = FragmentMakoChain(base=None,
+                                     lookup_dirs=self.__template_dirs__)
+        fragment.add_content(self.load_template('xblock_scilab/studio_view.mako'))
+        fragment.add_context(context)
         fragment.add_css(self.load_css('studio_view.css'))
         fragment.add_javascript(self.load_js('studio_view.js'))
         fragment.initialize_js('ScilabXBlockStudioView')
@@ -126,7 +128,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
     def _get_instructor_context(self):
         # TODO: Parents should declare what they provide for instructor context
         return {
-            'id': self.scope_ids.usage_id,
+            'id': str(self.scope_ids.usage_id),
             'metadata': json.dumps({
                 'display_name': self.display_name,
                 'description': self.description,
