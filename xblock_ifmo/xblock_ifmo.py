@@ -123,7 +123,7 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
 
         # Use init, instead of add_content, otherwise it will be re-rendered each time
         fragment = FragmentMakoChain(lookup_dirs=self.__template_dirs,
-                                     content=self.load_template('student_view.mako', package='xblock_ifmo'))
+                                     content=self.load_template('xblock_ifmo/student_view.mako', package='xblock_ifmo'))
         fragment.add_javascript(self.load_js('init-modals.js', package='xblock_ifmo'))
         fragment.add_javascript(self.load_js('state-modal.js', package='xblock_ifmo'))
         fragment.add_javascript(self.load_js('debug-info-modal.js', package='xblock_ifmo'))
