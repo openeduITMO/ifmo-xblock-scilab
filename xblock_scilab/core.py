@@ -109,7 +109,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             'allow_submissions': True if self.due is None or now() > self.due else False,
             'task_status': self.queue_details.get('state', 'IDLE'),
             'pregenerated': pregenerated,
-            'need_show_interface': not self.need_generate or self.pregenerated,
+            'need_show_interface': self._is_studio() or not self.need_generate or self.pregenerated,
         })
         if self.message is not None:
             context.update({
