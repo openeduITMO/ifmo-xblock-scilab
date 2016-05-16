@@ -66,9 +66,9 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         if context is None:
             context = dict()
 
-        deep_update(context, {'render_context': self._get_instructor_context()})
+        deep_update(context, {'render_context': self.get_settings_context()})
 
-        fragment = FragmentMakoChain(base=None,
+        fragment = FragmentMakoChain(base=super(ScilabXBlock, self).studio_view(),
                                      lookup_dirs=self.__template_dirs__)
         fragment.add_content(self.load_template('xblock_scilab/studio_view.mako'))
         fragment.add_context(context)
@@ -125,24 +125,22 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
 
         return context
 
-    def _get_instructor_context(self):
-        # TODO: Parents should declare what they provide for instructor context
-        return {
-            'id': str(self.scope_ids.usage_id),
-            'metadata': json.dumps({
-                'display_name': self.display_name,
-                'description': self.description,
-                'weight': self.weight,
-                'attempts': self.attempts,
+    def get_settings_context(self):
+
+        context = super(ScilabXBlock, self).get_settings_context()
+        deep_update(context, {
+            'metadata': {
                 'queue_name': self.queue_name,
                 'time_limit_generate': self.time_limit_generate,
                 'time_limit_execute': self.time_limit_execute,
                 'time_limit_check': self.time_limit_check,
                 'instructor_archive': self.instructor_archive_meta,
-            }),
-        }
+            },
+        })
 
-    #==================================================================================================================#
+        return context
+
+    # ================================================================================================================ #
 
     @XBlock.json_handler
     def save_settings(self, data, suffix):

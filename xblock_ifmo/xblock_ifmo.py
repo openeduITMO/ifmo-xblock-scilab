@@ -1,14 +1,11 @@
 # -*- coding=utf-8 -*-
 
-import json
 import logging
 
 from courseware.models import StudentModule
 from django.contrib.auth.models import User
 from path import path
 from xblock.core import XBlock
-from xblock.fragment import Fragment
-from xqueue_api.utils import deep_update
 from webob.response import Response
 
 from .fragment import FragmentMakoChain
@@ -116,12 +113,6 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
 
     def student_view(self, context=None):
 
-        if context is None:
-            context = {}
-
-        deep_update(context, {'render_context': self.get_student_context()})
-
-        # Use init, instead of add_content, otherwise it will be re-rendered each time
         fragment = FragmentMakoChain(lookup_dirs=self.__template_dirs,
                                      content=self.load_template('xblock_ifmo/student_view.mako', package='xblock_ifmo'))
         fragment.add_javascript(self.load_js('init-modals.js', package='xblock_ifmo'))
@@ -131,8 +122,27 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
 
         return fragment
 
+    def studio_view(self, context=None):
+
+        fragment = FragmentMakoChain(lookup_dirs=self.__template_dirs,
+                                     content=self.load_template('xblock_ifmo/settings_view.mako', package='xblock_ifmo'))
+        fragment.add_css(self.load_css('settings.css', package='xblock_ifmo'))
+
+        return fragment
+
     def get_student_context(self, user=None):
         return self.get_student_context_base(user)
+
+    def get_settings_context(self):
+        return {
+            'id': str(self.scope_ids.usage_id),
+            'metadata': {
+                'display_name': self.display_name,
+                'description': self.description,
+                'weight': self.weight,
+                'attempts': self.attempts,
+            },
+        }
 
     def get_student_context_base(self, user=None):
         return {
