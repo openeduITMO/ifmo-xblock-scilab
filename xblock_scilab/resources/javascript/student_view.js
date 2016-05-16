@@ -28,8 +28,19 @@ function ScilabXBlockStudentView(runtime, element)
             var percent = parseInt(data.loaded / data.total * 100, 10);
             xblock.find(".upload_do").text("Uploading... " + percent + "%");
         },
+        start: function() {
+            helpers.disable_controllers(element);
+        },
         done: function (e, data) {
             render(data.result);
+        },
+        fail: function() {
+            // Эмулируем сброс файла, потому что нам не из чего перерендерить страницу
+            $(element).find("button.button.upload_another").click();
+            alert('При загрузке архива с решением произошла ошибка');
+        },
+        always: function() {
+            helpers.enable_controllers(element);
         }
     };
 
@@ -62,12 +73,12 @@ function ScilabXBlockStudentView(runtime, element)
 
         disable_controllers: function(context)
         {
-            $(context).find("input").addClass('disabled').attr("disabled", "disabled");
+            $(context).find("input,button").addClass('disabled').attr("disabled", "disabled");
         },
 
         enable_controllers: function(context)
         {
-            $(context).find("input").removeClass('disabled').removeAttr("disabled");
+            $(context).find("input,button").removeClass('disabled').removeAttr("disabled");
         }
 
     };
