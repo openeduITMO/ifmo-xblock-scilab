@@ -10,14 +10,27 @@ function ScilabXBlockSettingsView(runtime, element)
             var selected = element.find("div.ifmo-xblock-scilab-studio-archive-selected");
             selected.html('Выбран ' + data.files[0].name);
             selected.data('status', 'selected');
+            selected.data('status-name', data.files[0].name);
             element.find("input.ifmo-xblock-scilab-studio-archive-upload").off('click').on('click', function () {
                 element.find("input.ifmo-xblock-scilab-studio-archive-upload").val('Идёт загрузка...');
                 data.submit();
             });
         },
+        start: function() {
+            element.find('input').attr('disabled', 'disabled');
+        },
         done: function (e, data) {
             alert('Архив инструктора успешно загружен');
+            var selected = element.find("div.ifmo-xblock-scilab-studio-archive-selected");
+            selected.data('status', 'uploaded');
+            selected.html('Загружен ' + selected.data('status-name'));
+        },
+        fail: function() {
+            alert('При загрузке архива инструктора произошла ошибка');
+        },
+        always: function() {
             element.find("input.ifmo-xblock-scilab-studio-archive-upload").val('Загрузить');
+            element.find('input').removeAttr('disabled');
         }
     };
 
