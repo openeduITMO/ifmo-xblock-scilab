@@ -109,6 +109,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             'allow_submissions': True if self.due is None or now() > self.due else False,
             'task_status': self.queue_details.get('state', 'IDLE'),
             'pregenerated': pregenerated,
+            'need_show_interface': not self.need_generate or self.pregenerated,
         })
         if self.message is not None:
             context.update({
@@ -474,7 +475,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             self.message = None
         else:
             self.pregenerated = None
-            self.message = "При генерации задания произошла ошибка."
+            self.message = "При генерации задания произошла ошибка. Пожалуйста, обновите страницу."
 
     @XBlock.json_handler
     def get_submissions_data(self, data, suffix=''):

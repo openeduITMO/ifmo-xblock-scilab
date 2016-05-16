@@ -89,7 +89,7 @@
 </%block>
 
 <%block name="task_text">
-    <%text><% if (task_status != 'GENERATING') { %></%text>
+    <%text><% if (task_status != 'GENERATING' && need_show_interface) { %></%text>
         ${meta['text']}
     <%text><% } %></%text>
 </%block>
@@ -98,12 +98,16 @@
     <%text>
         <% if (allow_submissions) { %>
 
-            <% if (task_status == 'IDLE') { %>
-                <div class="controllers">
-                    <div class="upload_container"></div>
-                </div>
-            <% } else { %>
-                <!--<div class="ifmo-xblock-message ifmo-xblock-message-info">Your submission is queued for grading.</div>-->
+            <% if (need_show_interface) { %>
+
+                <% if (task_status == 'IDLE') { %>
+                    <div class="controllers">
+                        <div class="upload_container"></div>
+                    </div>
+                <% } else { %>
+                    <!--<div class="ifmo-xblock-message ifmo-xblock-message-info">Your submission is queued for grading.</div>-->
+                <% } %>
+
             <% } %>
 
         <% } else { %>
