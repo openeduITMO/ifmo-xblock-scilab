@@ -70,11 +70,11 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
 
         fragment = FragmentMakoChain(base=super(ScilabXBlock, self).studio_view(),
                                      lookup_dirs=self.__template_dirs__)
-        fragment.add_content(self.load_template('xblock_scilab/studio_view.mako'))
+        fragment.add_content(self.load_template('xblock_scilab/settings_view.mako'))
         fragment.add_context(context)
-        fragment.add_css(self.load_css('studio_view.css'))
-        fragment.add_javascript(self.load_js('studio_view.js'))
-        fragment.initialize_js('ScilabXBlockStudioView')
+        fragment.add_css(self.load_css('settings_view.css'))
+        fragment.add_javascript(self.load_js('settings_view.js'))
+        fragment.initialize_js('ScilabXBlockSettingsView')
         return fragment
 
     #==================================================================================================================#

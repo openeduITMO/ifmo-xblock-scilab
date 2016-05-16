@@ -1,4 +1,4 @@
-function ScilabXBlockStudioView(runtime, element)
+function ScilabXBlockSettingsView(runtime, element)
 {
 
     var global_view = this;
