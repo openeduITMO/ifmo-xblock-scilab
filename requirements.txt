@@ -1,1 +1,2 @@
--e git+https://de.ifmo.ru/scm/git/ifmo-xqueue-api@fbd1ce894064f03f62f86394227506b43cf4cc81#egg=ifmo-xqueue-api==4.1
+-e git+https://github.com/defance/ifmo-submissions@e2dd75d2e101b0b4dfb689cad49350c172ac1ee7#egg=ifmo-submissions==4.1
+-e git+https://de.ifmo.ru/scm/git/ifmo-xqueue-api@2e3af7119384bd54c47e0a286dd82272a06e8cdf#egg=ifmo-xqueue-api==4.1.1
