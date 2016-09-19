@@ -20,6 +20,7 @@ from xblock_ifmo.fragment import FragmentMakoChain
 from xblock_ifmo.xblock_ifmo import IfmoXBlock
 from xblock_ifmo.xblock_xqueue import XBlockXQueueMixin, xqueue_callback
 from xblock_ifmo.utils import now, datetime_mapper
+from xmodule.util.duedate import get_extended_due_date
 from xqueue_api.utils import deep_update
 from xqueue_api.xsubmission import XSubmissionResult
 from webob.response import Response
@@ -106,7 +107,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
                 pass
 
         context.update({
-            'allow_submissions': True if self.due is None or now() > self.due else False,
+            'allow_submissions': True if (self.due is None) or (now() < get_extended_due_date(self)) else False,
             'task_status': self.queue_details.get('state', 'IDLE'),
             'pregenerated': pregenerated,
             'need_show_interface': self._is_studio() or not self.need_generate or self.pregenerated,
