@@ -6,6 +6,7 @@ from courseware.models import StudentModule
 from django.contrib.auth.models import User
 from path import path
 from xblock.core import XBlock
+from xmodule.util.duedate import get_extended_due_date
 from webob.response import Response
 
 from .fragment import FragmentMakoChain
@@ -145,13 +146,14 @@ class IfmoXBlock(IfmoXBlockFields, IfmoXBlockResources, XBlock):
         }
 
     def get_student_context_base(self, user=None):
+        due = get_extended_due_date(self)
         return {
             'meta': {
                 'location': str(self.scope_ids.usage_id),
                 'id': self.scope_ids.usage_id.block_id,
                 'name': self.display_name,
                 'text': self.description or "",
-                'due': self.due,
+                'due': due.strftime('%d.%m.%Y %H:%M:%S') if due else None,
                 'attempts': self.attempts,
             },
             'student_state': {
