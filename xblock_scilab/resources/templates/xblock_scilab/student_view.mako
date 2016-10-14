@@ -17,12 +17,14 @@
     </section>
 
     <%include file="_submission_modal.mako" args="**context"/>
+    <%include file="_queue_modal.mako" args="**context"/>
 
 </%block>
 
 <%block name="instructor_actions">
     ${parent.instructor_actions()}
     <a class="instructor-info-action" href="#${meta['id']}-submissions-modal" id="${meta['id']}-submissions-button">Загруженные решения</a>
+    <a class="instructor-info-action" href="#${meta['id']}-queue-info-modal" id="${meta['id']}-queue-info-button">Состояние очереди</a>
 </%block>
 
 <%block name="debug_info_rows">
@@ -83,7 +85,7 @@
 <%block name="message">
     <%text>
         <% if (typeof message != 'undefined' && message.text != '' && task_status != 'GENERATING') { %>
-        <div class="ifmo-xblock-message ifmo-xblock-message-<%= message.type %>"><%= message.text %></div>
+        <!-- <div class="ifmo-xblock-message ifmo-xblock-message-<%= message.type %>"><%= message.text %></div> -->
         <% } %>
     </%text>
 </%block>
