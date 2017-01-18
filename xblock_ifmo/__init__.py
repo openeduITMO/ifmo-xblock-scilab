@@ -1,1 +1,0 @@
-from .xblock_ifmo import IfmoXBlock
