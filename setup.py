@@ -8,7 +8,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='ifmo-xblock-scilab',
-    version='4.2',
+    version='4.3',
     install_requires=[
         'django',
         'path.py',

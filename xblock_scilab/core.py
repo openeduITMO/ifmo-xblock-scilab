@@ -22,7 +22,7 @@ from xblock_ifmo.xblock_xqueue import XBlockXQueueMixin, xqueue_callback
 from xblock_ifmo.utils import now, datetime_mapper
 from xmodule.util.duedate import get_extended_due_date
 from xqueue_api.utils import deep_update
-from xqueue_api.xsubmission import XSubmissionResult
+from xqueue_api.xblocksubmission import XBlockSubmissionResult
 from webob.response import Response
 
 from .fields import ScilabXBlockFields
@@ -33,6 +33,8 @@ BLOCK_SIZE = 8 * 1024
 
 @XBlock.needs("user")
 class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
+
+    xqueue_sender_name = 'ifmo_xblock_scilab'
 
     package = __package__
     __template_dirs__ = [path(__file__).dirname().abspath() / "resources" / "templates" / "xblock_scilab"]
@@ -406,7 +408,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
             result = json.dumps(result)
         return result
 
-    @xqueue_callback(XSubmissionResult)
+    @xqueue_callback(XBlockSubmissionResult)
     def score_update(self, submission_result):
 
         parent = super(ScilabXBlock, self)
