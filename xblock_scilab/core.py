@@ -32,12 +32,10 @@ BLOCK_SIZE = 8 * 1024
 
 
 @XBlock.needs("user")
+@IfmoXBlock.register_resource_dir()
 class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
 
     xqueue_sender_name = 'ifmo_xblock_scilab'
-
-    package = __package__
-    __template_dirs__ = [path(__file__).dirname().abspath() / "resources" / "templates" / "xblock_scilab"]
 
     # Use this unless submissions api is used
     # always_recalculate_grades = True
@@ -54,7 +52,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         deep_update(context, {'render_context': self.get_student_context()})
 
         fragment = FragmentMakoChain(base=super(ScilabXBlock, self).student_view(),
-                                     lookup_dirs=self.__template_dirs__)
+                                     lookup_dirs=self.get_template_dirs())
         fragment.add_content(self.load_template('xblock_scilab/student_view.mako'))
         fragment.add_context(context)
         fragment.add_css(self.load_css('student_view.css'))
@@ -73,7 +71,7 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         deep_update(context, {'render_context': self.get_settings_context()})
 
         fragment = FragmentMakoChain(base=super(ScilabXBlock, self).studio_view(),
-                                     lookup_dirs=self.__template_dirs__)
+                                     lookup_dirs=self.get_template_dirs())
         fragment.add_content(self.load_template('xblock_scilab/settings_view.mako'))
         fragment.add_context(context)
         fragment.add_css(self.load_css('settings_view.css'))

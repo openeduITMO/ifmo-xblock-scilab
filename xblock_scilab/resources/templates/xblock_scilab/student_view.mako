@@ -16,8 +16,8 @@
 
     </section>
 
-    <%include file="_submission_modal.mako" args="**context"/>
-    <%include file="_queue_modal.mako" args="**context"/>
+    <%include file="xblock_scilab/_submission_modal.mako" args="**context"/>
+    <%include file="xblock_scilab/_queue_modal.mako" args="**context"/>
 
 </%block>
 
