@@ -15,7 +15,7 @@ from ifmo_submissions import api as ifmo_submissions_api
 from path import path
 from submissions import api as submissions_api
 from xblock.core import XBlock
-from xblock_ifmo.core import IfmoXBlock, XQueueMixin
+from xblock_ifmo.core import IfmoXBlock, XQueueMixin, SubmissionsMixin
 from xblock_ifmo import FragmentMakoChain, xqueue_callback, now, datetime_mapper
 from xmodule.util.duedate import get_extended_due_date
 from xqueue_api.utils import deep_update
@@ -30,7 +30,7 @@ BLOCK_SIZE = 8 * 1024
 
 @XBlock.needs("user")
 @IfmoXBlock.register_resource_dir()
-class ScilabXBlock(ScilabXBlockFields, XQueueMixin, IfmoXBlock):
+class ScilabXBlock(ScilabXBlockFields, XQueueMixin, SubmissionsMixin, IfmoXBlock):
 
     xqueue_sender_name = 'ifmo_xblock_scilab'
 
@@ -54,7 +54,6 @@ class ScilabXBlock(ScilabXBlockFields, XQueueMixin, IfmoXBlock):
         fragment.add_context(context)
         fragment.add_css(self.load_css('student_view.css'))
         fragment.add_javascript(self.load_js('student_view.js'))
-        fragment.add_javascript(self.load_js('submission-modal.js'))
         fragment.initialize_js('ScilabXBlockStudentView')
 
         return fragment
@@ -474,60 +473,6 @@ class ScilabXBlock(ScilabXBlockFields, XQueueMixin, IfmoXBlock):
         else:
             self.pregenerated = None
             self.message = "При генерации задания произошла ошибка. Пожалуйста, обновите страницу."
-
-    @XBlock.json_handler
-    def get_submissions_data(self, data, suffix=''):
-
-        def result(message, success=True, response_type=None):
-            return {
-                "success": success,
-                "type": response_type,
-                "message": message,
-            }
-
-        def get_anon_id(username):
-            return self.runtime.service(self, 'user').get_anonymous_user_id(username, str(self.course_id))
-
-        def extract_user_and_attempt(user_and_attempt):
-            submission_param = user_and_attempt.split('+')
-            return (submission_param[0],
-                    get_anon_id(submission_param[0]),
-                    submission_param[1] if len(submission_param) > 1 else None)
-
-        time_format = '%d.%m.%Y %H:%M:%S UTC'
-
-        (real_username, anon_id, attempt_id) = extract_user_and_attempt(data.get('submission_id'))
-
-        # Ensure user exists
-        if anon_id is None:
-            return result("User %s not found." % real_username, success=False)
-
-        student_dict = self.student_submission_dict(anon_student_id=anon_id)
-
-        # Get all attempts
-        if attempt_id is None:
-
-            submissions = submissions_api.get_submissions(student_dict)
-
-            result_submissions = [datetime_mapper(x, time_format) for x in submissions]
-
-            response = {
-                'username': real_username,
-                'submissions': result_submissions,
-            }
-
-            return result(response, response_type="submissions")
-
-        # Get specific attempt
-        else:
-
-            response = ifmo_submissions_api.get_submission_annotation(student_dict, attempt_id)
-            response['username'] = real_username
-
-            if not response:
-                return result("Решение не найдено")
-
-            return result(datetime_mapper(response, time_format), response_type="annotation", success=True)
 
     @XBlock.handler
     def download_archive(self, request, suffix):
