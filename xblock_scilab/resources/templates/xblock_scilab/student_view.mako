@@ -16,15 +16,17 @@
 
     </section>
 
-    <%include file="xblock_scilab/_submission_modal.mako" args="**context"/>
-    <%include file="xblock_scilab/_queue_modal.mako" args="**context"/>
 
 </%block>
 
 <%block name="instructor_actions">
     ${parent.instructor_actions()}
     <a class="instructor-info-action" href="#${meta['id']}-submissions-modal" id="${meta['id']}-submissions-button">Загруженные решения</a>
-    <a class="instructor-info-action" href="#${meta['id']}-queue-info-modal" id="${meta['id']}-queue-info-button">Состояние очереди</a>
+</%block>
+
+<%block name="block_modals">
+    ${parent.block_modals()}
+    <%include file="xblock_scilab/_submission_modal.mako" args="**context"/>
 </%block>
 
 <%block name="debug_info_rows">

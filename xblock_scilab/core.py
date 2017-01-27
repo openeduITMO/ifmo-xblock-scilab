@@ -58,7 +58,6 @@ class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
         fragment.add_css(self.load_css('student_view.css'))
         fragment.add_javascript(self.load_js('student_view.js'))
         fragment.add_javascript(self.load_js('submission-modal.js'))
-        fragment.add_javascript(self.load_js('queue-info-modal.js'))
         fragment.initialize_js('ScilabXBlockStudentView')
 
         return fragment
