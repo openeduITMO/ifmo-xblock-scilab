@@ -8,13 +8,6 @@
 
     <li class="field comp-setting-entry">
         <div class="wrapper-comp-setting">
-            <label for="input_${id}_queue_name" class="label setting-label">Имя очереди</label>
-            <input id="input_${id}_queue_name" class="input setting-input" type="text" name="queue_name" value="<%text><%= queue_name %></%text>" />
-        </div>
-    </li>
-
-    <li class="field comp-setting-entry">
-        <div class="wrapper-comp-setting">
             <label for="input_${id}_instructor_archive" class="label setting-label">Архив инструктора</label>
             <div class="ifmo-xblock-scilab-studio-archive-container">
                     <input id="input_${id}_instructor_archive" class="setting-input ifmo-xblock-scilab-studio-archive-file" type="file" name="instructor_archive"/>
