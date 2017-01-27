@@ -7,7 +7,6 @@ import json
 import mimetypes
 import re
 
-from courseware.models import StudentModule
 from django.conf import settings
 from django.core.files.base import File
 from django.core.files.storage import default_storage
@@ -592,80 +591,3 @@ class ScilabXBlock(ScilabXBlockFields, XQueueMixin, IfmoXBlock):
 
         else:
             return Response("Bad request", status=400)
-
-    @XBlock.json_handler
-    def get_user_queue_status(self, data, suffix=''):
-        """
-        Получить состояние пользователя в очереди.
-
-        :param data:
-        :param suffix:
-        :return:
-        """
-        username = data.get('username')
-        error_msg = "Не удалось определить состояние пользователя в очереди. " \
-                    "Возможно, пользователь не работал с компонентом."
-        try:
-            module = StudentModule.objects.get(student__username=username, module_state_key=self.location)
-        except StudentModule.DoesNotExist:
-            module = None
-
-        if module is not None:
-            try:
-                state = json.loads(module.state)
-                return {"username": username, "queue_status": state.get('queue_details') or error_msg}
-            except ValueError or KeyError:
-                return error_msg
-
-        else:
-            return "Модуль для указанного пользователя не найден."
-
-    @XBlock.json_handler
-    def reset_active_status(self, data, suffix=''):
-        """
-        Сбросить состояние пользователя в очереди.
-
-        :param data:
-        :param suffix:
-        :return:
-        """
-        username = data.get('username')
-        error_msg = "Не удалось сбросить состояние пользователя в очереди. "
-        try:
-            module = StudentModule.objects.get(student__username=username, module_state_key=self.location)
-        except StudentModule.DoesNotExist:
-            module = None
-
-        if module is not None:
-            try:
-                state = json.loads(module.state)
-                state['queue_details'] = {}
-                module.state = json.dumps(state)
-                module.save()
-                return "Состояние пользователя в очереди было сброшено."
-            except ValueError or KeyError:
-                return error_msg
-
-        else:
-            return "Модуль для указанного пользователя не найден."
-
-    @XBlock.json_handler
-    def get_active_status_list(self, data, suffix=''):
-        """
-        Получить список пользователей с активными состояниями и их статус.
-
-        :param data:
-        :param suffix:
-        :return:
-        """
-        result = []
-        modules = StudentModule.objects.filter(module_state_key=self.location)
-        for m in modules:
-            try:
-                state = json.loads(m.state)
-                queue_state = state.get('queue_details').get('state')
-                if queue_state in ['GENERATING', 'QUEUED']:
-                    result += [{"username": m.student.username, "queue_status": queue_state}]
-            except KeyError or ValueError or AttributeError:
-                pass
-        return result
