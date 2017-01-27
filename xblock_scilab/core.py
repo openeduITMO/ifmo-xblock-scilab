@@ -16,10 +16,8 @@ from ifmo_submissions import api as ifmo_submissions_api
 from path import path
 from submissions import api as submissions_api
 from xblock.core import XBlock
-from xblock_ifmo.fragment import FragmentMakoChain
-from xblock_ifmo.xblock_ifmo import IfmoXBlock
-from xblock_ifmo.xblock_xqueue import XBlockXQueueMixin, xqueue_callback
-from xblock_ifmo.utils import now, datetime_mapper
+from xblock_ifmo.core import IfmoXBlock, XQueueMixin
+from xblock_ifmo import FragmentMakoChain, xqueue_callback, now, datetime_mapper
 from xmodule.util.duedate import get_extended_due_date
 from xqueue_api.utils import deep_update
 from xqueue_api.xblocksubmission import XBlockSubmissionResult
@@ -33,7 +31,7 @@ BLOCK_SIZE = 8 * 1024
 
 @XBlock.needs("user")
 @IfmoXBlock.register_resource_dir()
-class ScilabXBlock(ScilabXBlockFields, XBlockXQueueMixin, IfmoXBlock):
+class ScilabXBlock(ScilabXBlockFields, XQueueMixin, IfmoXBlock):
 
     xqueue_sender_name = 'ifmo_xblock_scilab'
 

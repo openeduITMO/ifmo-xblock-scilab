@@ -1,8 +1,8 @@
 from xblock.fields import Boolean, Dict, Integer, Scope, String
-from xblock_ifmo.xblock_ifmo_fields import IfmoXBlockFields
+from xblock_ifmo.core import XBlockFieldsMixin
 
 
-class ScilabXBlockFields(IfmoXBlockFields):
+class ScilabXBlockFields(XBlockFieldsMixin):
 
     instructor_filename = String(
         display_name="Instructor file name",
