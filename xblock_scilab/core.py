@@ -16,7 +16,7 @@ from path import path
 from submissions import api as submissions_api
 from xblock.core import XBlock
 from xblock_ifmo.core import IfmoXBlock, XQueueMixin, SubmissionsMixin
-from xblock_ifmo import FragmentMakoChain, xqueue_callback, now
+from xblock_ifmo import FragmentMakoChain, xqueue_callback, now, reify_f
 from xblock_ifmo import get_sha1, file_storage_path
 from xmodule.util.duedate import get_extended_due_date
 from xqueue_api.utils import deep_update
@@ -76,6 +76,7 @@ class ScilabXBlock(ScilabXBlockFields, XQueueMixin, SubmissionsMixin, IfmoXBlock
 
     # ================================================================================================================ #
 
+    @reify_f
     def get_student_context(self, user=None):
 
         parent = super(ScilabXBlock, self)
