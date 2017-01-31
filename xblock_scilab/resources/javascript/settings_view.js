@@ -4,7 +4,7 @@ function ScilabXBlockSettingsView(runtime, element)
 
     var self = this;
 
-    var upload_logic = {
+    self.upload_logic = {
         url: self.runtime.handlerUrl(self.element, 'upload_instructor_archive'),
         add: function (e, data) {
             var selected = self.element.find("div.ifmo-xblock-scilab-studio-archive-selected");
@@ -80,11 +80,9 @@ function ScilabXBlockSettingsView(runtime, element)
             selected.data('status', 'uploaded');
         }
 
-        xblock.find('input.ifmo-xblock-scilab-studio-archive-file').fileupload(upload_logic);
+        xblock.find('input.ifmo-xblock-scilab-studio-archive-file').fileupload(self.upload_logic);
 
     };
-
-    self.child_var = "test";
 
     self.init_xblock_ready($, _);
 
@@ -93,4 +91,5 @@ function ScilabXBlockSettingsView(runtime, element)
     };
 
 }
+
 xblock_extend(ScilabXBlockSettingsView, IfmoXBlockSettingsView);

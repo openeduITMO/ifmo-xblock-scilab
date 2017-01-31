@@ -1,8 +1,8 @@
 function ScilabXBlockStudentView(runtime, element)
 {
-    var self = this;
+    ScilabXBlockStudentView.superclass.constructor.apply(this, [runtime, element]);
 
-    ScilabXBlockStudentView.superclass.constructor.apply(self, [runtime, element]);
+    var self = this;
 
     self.urls = {
         upload_logic: runtime.handlerUrl(element, 'upload_submission'),
@@ -142,10 +142,7 @@ function ScilabXBlockStudentView(runtime, element)
         self.render(context);
     };
 
-    $(function(){
-        self.pre_init_xblock(self, runtime, element, $, _);
-    });
-
+    self.init_xblock_ready($, _);
 }
 
 xblock_extend(ScilabXBlockStudentView, IfmoXBlockStudentView);
