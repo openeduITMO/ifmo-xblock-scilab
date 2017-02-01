@@ -113,11 +113,6 @@
 
 <%block name="upload_template">
     <script type="text/template" class="scilab-template-upload-input">
-        <%doc>
-            Template parameter:
-                {
-                }
-        </%doc>
         <div class="button upload_input">
             <span>Выберите файл</span>
             <input class="file_upload" type="file" name="submission"/>
@@ -125,12 +120,6 @@
     </script>
 
     <script type="text/template" class="scilab-template-upload-selected">
-        <%doc>
-            Template parameter:
-                {
-                    filename
-                }
-        </%doc>
         <button class="button upload_another">Выбрать другой файл</button>
         <button class="button button-highlighted upload_do" data-in-progress="Идёт отправка...">Отправить <%text><%= filename %></%text></button>
     </script>

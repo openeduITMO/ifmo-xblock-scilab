@@ -92,4 +92,5 @@ function ScilabXBlockSettingsView(runtime, element)
 
 }
 
+console.log("scilab view main class");
 xblock_extend(ScilabXBlockSettingsView, IfmoXBlockSettingsView);

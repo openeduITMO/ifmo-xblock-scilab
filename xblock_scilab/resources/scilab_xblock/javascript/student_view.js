@@ -126,11 +126,6 @@ function ScilabXBlockStudentView(runtime, element)
         var xblock = $(element).find('.ifmo-xblock-base');
         var context = xblock.data('context');
 
-        var is_staff = context.student_state.is_staff == true;
-        if (is_staff) {
-            $(element).find('.instructor-info-action').leanModal();
-        }
-
         var template = _.partial(self.get_template, element);
         self.add_templates(self, {
             main: template('script.ifmo-xblock-template-base'),
