@@ -33,6 +33,7 @@ BLOCK_SIZE = 8 * 1024
 class ScilabXBlock(ScilabXBlockFields, XQueueMixin, SubmissionsMixin, IfmoXBlock):
 
     xqueue_sender_name = 'ifmo_xblock_scilab'
+    submission_type = "scilab_xblock"
 
     # Use this unless submissions api is used
     # always_recalculate_grades = True
@@ -129,7 +130,6 @@ class ScilabXBlock(ScilabXBlockFields, XQueueMixin, SubmissionsMixin, IfmoXBlock
         context = super(ScilabXBlock, self).get_settings_context()
         deep_update(context, {
             'metadata': {
-                'queue_name': self.queue_name,
                 'time_limit_generate': self.time_limit_generate,
                 'time_limit_execute': self.time_limit_execute,
                 'time_limit_check': self.time_limit_check,
@@ -181,24 +181,6 @@ class ScilabXBlock(ScilabXBlockFields, XQueueMixin, SubmissionsMixin, IfmoXBlock
     def user_state(self, data, suffix=''):
         # TODO: Do user_state more like save_settings
         return self.get_response_user_state(self.get_student_context())
-
-    def student_submission_dict(self, anon_student_id=None):
-        # pylint: disable=no-member
-        """
-        Returns dict required by the submissions app for creating and
-        retrieving submissions for a particular student.
-        """
-        if anon_student_id is None:
-            anon_student_id = self.xmodule_runtime.anonymous_student_id
-            assert anon_student_id != (
-                'MOCK', "Forgot to call 'personalize' in test."
-            )
-        return {
-            "student_id": anon_student_id,
-            "course_id": str(self.course_id),
-            "item_id": str(self.location.block_id),
-            "item_type": 'scilab_xblock',  # ???
-        }
 
     @XBlock.handler
     def upload_submission(self, request, suffix):
