@@ -370,9 +370,24 @@ class ScilabXBlock(ScilabXBlockFields, XQueueMixin, SubmissionsMixin, IfmoXBlock
 
     def get_queue_student_response(self, submission=None, dump=True):
         # TODO: Protect this with hash
+        # TODO: Вынести формирование адреса для xqueue в обобщенный интерфейс
+
+        # В некоторых случаях грейдер должен обратиться к LMS за дополнительными данными, при этом адрес LMS для
+        # грейдера может отличаться от того, который предназначен для пользователя. Например, для внешних соединений
+        # адрес представляет доменное имя с https, а грейдер внутри сети может обратиться к LMS по http/ip.
+
+        # Полный адрес обработчика с указанием протокола
         base_url = self.runtime.handler_url(self, 'get_submitted_archives', thirdparty=True)
+
+        # Получаем из настроет callback_url для xqueue
         callback_url = settings.XQUEUE_INTERFACE.get("callback_url")
+
+        # Если он задан, перезаписываем полный адрес обработчика
         if callback_url:
+
+            # SITENAME содержит исключительно доменное имя или ip без указания протокола
+            # Заменяем найденный в полном адресе обработчике SITENAME на callback_url
+            # TODO: Корректно обрабатывать https, если он указан в настройках
             base_url = re.sub("http.?//%s" % settings.SITE_NAME, callback_url, base_url)
 
         if submission is None:
