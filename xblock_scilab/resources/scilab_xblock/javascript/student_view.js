@@ -33,7 +33,7 @@ function ScilabXBlockStudentView(runtime, element)
             xblock.find(".upload_do").text("Uploading... " + percent + "%");
         },
         start: function() {
-            this.helpers.disable_controllers(element);
+            self.helpers.disable_controllers(element);
         },
         done: function (e, data) {
             render(data.result);
@@ -44,7 +44,7 @@ function ScilabXBlockStudentView(runtime, element)
             alert('При загрузке архива с решением произошла ошибка');
         },
         always: function() {
-            this.helpers.enable_controllers(element);
+            self.helpers.enable_controllers(element);
         }
     };
 
