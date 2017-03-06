@@ -36,7 +36,7 @@ function ScilabXBlockStudentView(runtime, element)
             self.helpers.disable_controllers(element);
         },
         done: function (e, data) {
-            render(data.result);
+            self.render(data.result);
         },
         fail: function() {
             // Эмулируем сброс файла, потому что нам не из чего перерендерить страницу
