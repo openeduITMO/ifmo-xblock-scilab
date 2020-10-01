@@ -10,7 +10,7 @@
 
    -  ``sudo su - edxapp -s /bin/bash``
    -  ``. edxapp_env``
-   -  ``pip install -e git+https://de.ifmo.ru/scm/git/ifmo-xblock-scilab@master#egg=ifmo-xblock-scilab``
+   -  ``pip install -e git+https://de.ifmo.ru/scm/git/ifmo-xblock-scilab@v9.0#egg=ifmo-xblock-scilab==9.0``
 
 2. Add edx\_sga to installed Django apps
 
