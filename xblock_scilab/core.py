@@ -12,7 +12,6 @@ from django.core.files.base import File
 from django.core.files.storage import default_storage
 from functools import partial
 from ifmo_submissions import api as ifmo_submissions_api
-from path import path
 from submissions import api as submissions_api
 from xblock.core import XBlock
 from xblock_ifmo.core import IfmoXBlock, XQueueMixin, SubmissionsMixin

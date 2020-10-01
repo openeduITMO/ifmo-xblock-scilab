@@ -75,8 +75,8 @@
 
 <%block name="message">
     <%text>
-        <% if (typeof message != 'undefined' && message.text != '' && task_status != 'GENERATING') { %>
-        <!-- <div class="ifmo-xblock-message ifmo-xblock-message-<%= message.type %>"><%= message.text %></div> -->
+        <% if (typeof message != 'undefined' && message.text != '' && task_status != 'GENERATING' && task_status != 'QUEUED') { %>
+        <div class="ifmo-xblock-message ifmo-xblock-message-<%= message.type %>"><%= message.text %></div>
         <% } %>
     </%text>
 </%block>
